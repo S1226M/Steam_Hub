@@ -5,6 +5,7 @@ import "./App.css";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import AdminLayout from "./Layout/Admin/AdminLayout";
 import UserLayout from "./Layout/User/UserLayout";
+import Home from "./components/User/Home";
 
 function App() {
   return (
@@ -15,7 +16,11 @@ function App() {
         </Route>
 
         <Route path="/user" element={<UserLayout />}>
-          {/* OutletCode */}
+          <Route path="home" element={<Home />} />
+          {/* <Route path="explore" element={<Explore />} /> */}
+          {/* <Route path="subscriptions" element={<Subscriptions />} /> */}
+          {/* <Route path="library" element={<Library />} /> */}
+        {/* More nested pages */}
         </Route>
       </Routes>
     </BrowserRouter>

@@ -1,10 +1,39 @@
+/* Root container — full viewport, scroll here, not in content */
 #root {
+  width: 100%;
+  min-height: 100vh;
   max-width: 1280px;
   margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+  display: flex;
+  flex-direction: column;
+  overflow: auto;
+  background: #f9f9f9;
 }
 
+/* Main content area */
+.main-outlet-content {
+  flex: 1;
+  overflow: visible;  /* No scroll here */
+  width: 100%;
+}
+
+/* Default button styles (optional) */
+button {
+  border-radius: 8px;
+  border: 1px solid transparent;
+  padding: 0.6em 1.2em;
+  font-size: 1em;
+  font-weight: 500;
+  font-family: inherit;
+  background-color: #f9f9f9;
+  cursor: pointer;
+  transition: border-color 0.25s;
+}
+button:hover {
+  border-color: #646cff;
+}
+
+/* Original logo and animation styles (keep them, or remove if unused) */
 .logo {
   height: 6em;
   padding: 1.5em;
@@ -17,26 +46,14 @@
 .logo.react:hover {
   filter: drop-shadow(0 0 2em #61dafbaa);
 }
-
 @keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
-
 @media (prefers-reduced-motion: no-preference) {
   a:nth-of-type(2) .logo {
     animation: logo-spin infinite 20s linear;
   }
 }
-
-.card {
-  padding: 2em;
-}
-
-.read-the-docs {
-  color: #888;
-}
+.card { padding: 2em; }
+.read-the-docs { color: #888; }
