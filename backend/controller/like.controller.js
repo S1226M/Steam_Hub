@@ -1,11 +1,15 @@
 import { Like } from "../model/like.model.js";
-// import { Video } from "../model/video.model.js";
+import Video from "../model/video.model.js"; // ✅ Correct default import
 
 
 
 export const toggleVideoLike = async (req, res) => {
   try {
     const { videoId } = req.params;
+    // Defensive check for req.user
+    if (!req.user || !req.user._id) {
+      return res.status(401).json({ message: "Unauthorized. No user found." });
+    }
     const userId = req.user._id;
 
     // Check if the video exists
@@ -44,6 +48,10 @@ export const toggleVideoLike = async (req, res) => {
 
 export const getLikedVideos = async (req, res) => {
   try {
+    // Defensive check for req.user
+    if (!req.user || !req.user._id) {
+      return res.status(401).json({ message: "Unauthorized. No user found." });
+    }
     const userId = req.user._id;
 
     const likes = await Like.find({ likeBy: userId }).populate("video");
@@ -55,3 +63,8 @@ export const getLikedVideos = async (req, res) => {
     res.status(500).json({ message: "Server Error" });
   }
 };
+
+export default {
+    toggleVideoLike,
+    getLikedVideos
+}
