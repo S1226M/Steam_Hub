@@ -1,5 +1,5 @@
-import { Like } from "../models/Like.js";
-import { Video } from "../models/Video.js";
+import { Like } from "../model/like.model.js";
+import { Video } from "../model/video.model.js";
 
 
 
