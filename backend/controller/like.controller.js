@@ -1,16 +1,16 @@
 import { Like } from "../model/like.model.js";
 import Video from "../model/video.model.js"; // ✅ Correct default import
 
-
-
 export const toggleVideoLike = async (req, res) => {
   try {
+    // Extract videoId from request parameters and userId from request body
     const { videoId } = req.params;
-    // Defensive check for req.user
-    if (!req.user || !req.user._id) {
-      return res.status(401).json({ message: "Unauthorized. No user found." });
+    const { userId } = req.body;
+    
+    // Check if userId is provided
+    if (!userId) {
+      return res.status(400).json({ message: "userId is required in request body" });
     }
-    const userId = req.user._id;
 
     // Check if the video exists
     const video = await Video.findById(videoId);
@@ -45,14 +45,14 @@ export const toggleVideoLike = async (req, res) => {
   }
 };
 
-
 export const getLikedVideos = async (req, res) => {
   try {
-    // Defensive check for req.user
-    if (!req.user || !req.user._id) {
-      return res.status(401).json({ message: "Unauthorized. No user found." });
+    // Get userId from query parameters
+    const { userId } = req.query;
+    
+    if (!userId) {
+      return res.status(400).json({ message: "userId is required as query parameter" });
     }
-    const userId = req.user._id;
 
     const likes = await Like.find({ likeBy: userId }).populate("video");
     const videos = likes.map(l => l.video);
