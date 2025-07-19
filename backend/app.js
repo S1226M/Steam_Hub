@@ -6,7 +6,7 @@ import { connectDB } from "./db/connection.js";
 import videoRoutes from "./route/video.route.js";
 
 // ❌ Commented out other unused routes for now
-// import userRoutes from "./route/user.route.js";
+import userRoutes from "./route/user.route.js";
 // import likeRoutes from "./route/like.route.js";
 // import playlistRoutes from "./route/playlist.route.js";
 // import commentRoutes from "./route/comment.route.js";
@@ -23,7 +23,7 @@ connectDB();
 app.use("/api/videos", videoRoutes);
 
 // ❌ Commented: User, Like, Playlist, Comment APIs
-// app.use("/api/users", userRoutes);
+app.use("/api/users", userRoutes);
 // app.use("/api/likes", likeRoutes);
 // app.use("/api/playlists", playlistRoutes);
 // app.use("/api/comments", commentRoutes);

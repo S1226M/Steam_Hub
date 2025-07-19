@@ -1,5 +1,5 @@
 import express from "express";
-import User from "../model/user.model.js"; 
+import User from "../model/user.model.js";
 
 
 // const User = require('../model/user.model.js');
@@ -9,7 +9,7 @@ import User from "../model/user.model.js";
 const getAllUsers = async (req, res) => {
     try {
         const users = await User.find();
-        res.status(200).json({ message: "All users fetched", data: users });
+        res.send(users);
     } catch (error) {
         res.status(500).json({ message: "Error fetching users", error: error.message });
     }
@@ -30,5 +30,5 @@ const getUserById = async (req, res) => {
 
 export default {
     getAllUsers,
-    getUserById 
+    getUserById
 }
