@@ -1,7 +1,23 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import "./UserProfileDropdown.css";
 
-const UserProfileDropdown = ({ isOpen, onClose, user }) => {
+const UserProfileDropdown = ({ isOpen, onClose, user, triggerRef }) => {
+  const [dropdownPosition, setDropdownPosition] = useState({
+    top: 0,
+    right: 0,
+  });
+
+  useEffect(() => {
+    if (isOpen && triggerRef?.current) {
+      const rect = triggerRef.current.getBoundingClientRect();
+      setDropdownPosition({
+        top: rect.bottom + 8, // 8px gap
+        right: window.innerWidth - rect.right,
+      });
+    }
+  }, [isOpen, triggerRef]);
+
   if (!isOpen) return null;
 
   const handleLogout = () => {
@@ -22,10 +38,16 @@ const UserProfileDropdown = ({ isOpen, onClose, user }) => {
     onClose();
   };
 
-  return (
+  const dropdownContent = (
     <>
       <div className="dropdown-overlay" onClick={onClose}></div>
-      <div className="user-profile-dropdown">
+      <div
+        className="user-profile-dropdown"
+        style={{
+          top: dropdownPosition.top,
+          right: dropdownPosition.right,
+        }}
+      >
         <div className="dropdown-header">
           <div className="user-info">
             <div className="user-avatar">
@@ -150,6 +172,8 @@ const UserProfileDropdown = ({ isOpen, onClose, user }) => {
       </div>
     </>
   );
+
+  return createPortal(dropdownContent, document.body);
 };
 
 export default UserProfileDropdown;

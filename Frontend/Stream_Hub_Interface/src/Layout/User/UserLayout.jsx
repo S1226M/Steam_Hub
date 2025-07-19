@@ -1,5 +1,5 @@
 // File: UserLayout.jsx
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { Outlet, NavLink } from "react-router-dom";
 import UserProfileDropdown from "../../components/User/UserProfileDropdown";
 import "./UserLayout.css";
@@ -7,6 +7,7 @@ import "./UserLayout.css";
 export default function UserLayout() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
+  const profileButtonRef = useRef(null);
 
   // Mock user data - replace with actual user data from your auth system
   const [user] = useState({
@@ -88,6 +89,7 @@ export default function UserLayout() {
 
         <div className="user-profile">
           <button
+            ref={profileButtonRef}
             className="profile-circle"
             onClick={toggleProfileDropdown}
             aria-label="Open user profile menu"
@@ -112,6 +114,7 @@ export default function UserLayout() {
         isOpen={isProfileDropdownOpen}
         onClose={closeProfileDropdown}
         user={user}
+        triggerRef={profileButtonRef}
       />
 
       {/* Main Layout */}
