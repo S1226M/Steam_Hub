@@ -1,6 +1,7 @@
 // File: UserLayout.jsx
 import React, { useState, useRef } from "react";
 import { Outlet, NavLink } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
 import UserProfileDropdown from "../../components/User/UserProfileDropdown";
 import "./UserLayout.css";
 
@@ -8,13 +9,11 @@ export default function UserLayout() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
   const profileButtonRef = useRef(null);
+  const { user, logout } = useAuth();
 
-  // Mock user data - replace with actual user data from your auth system
-  const [user] = useState({
-    name: "John Doe",
-    email: "john.doe@example.com",
-    avatar: null, // Add user avatar URL here
-    premium: true,
+  console.log('UserLayout Debug:', {
+    user: !!user,
+    userData: user
   });
 
   const toggleMobileMenu = () => {
@@ -95,10 +94,10 @@ export default function UserLayout() {
             aria-label="Open user profile menu"
             aria-expanded={isProfileDropdownOpen}
           >
-            {user.avatar ? (
-              <img src={user.avatar} alt={user.name} />
+            {user?.profileimage ? (
+              <img src={user.profileimage} alt={user.fullname} />
             ) : (
-              user.name.charAt(0).toUpperCase()
+              user?.fullname?.charAt(0).toUpperCase() || 'U'
             )}
           </button>
         </div>
@@ -115,6 +114,7 @@ export default function UserLayout() {
         onClose={closeProfileDropdown}
         user={user}
         triggerRef={profileButtonRef}
+        onLogout={logout}
       />
 
       {/* Main Layout */}

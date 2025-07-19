@@ -1,387 +1,435 @@
-import React, { useState, useRef, useEffect } from "react";
-import "./VideoPlayer.css";
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
+import { videoAPI, likeAPI, commentAPI } from '../../utils/api';
+import './VideoPlayer.css';
 
-const VideoPlayer = ({
-  src,
-  poster,
-  title,
-  channel,
-  views,
-  date,
-  onClose,
-  autoPlay = false,
-}) => {
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(0);
-  const [volume, setVolume] = useState(1);
-  const [isMuted, setIsMuted] = useState(false);
-  const [isFullscreen, setIsFullscreen] = useState(false);
-  const [showControls, setShowControls] = useState(true);
+export default function VideoPlayer() {
+  const { videoId } = useParams();
+  const navigate = useNavigate();
+  const { user, getAuthHeaders } = useAuth();
+  
+  const [video, setVideo] = useState(null);
+  const [comments, setComments] = useState([]);
+  const [recommendations, setRecommendations] = useState([]);
+  const [isLiked, setIsLiked] = useState(false);
+  const [likeCount, setLikeCount] = useState(0);
+  const [commentText, setCommentText] = useState('');
   const [isLoading, setIsLoading] = useState(true);
-
-  const videoRef = useRef(null);
-  const containerRef = useRef(null);
-  const controlsTimeoutRef = useRef(null);
+  const [error, setError] = useState('');
+  const [showComments, setShowComments] = useState(true);
+  const [isSubscribed, setIsSubscribed] = useState(false);
+  const [message, setMessage] = useState(null);
 
   useEffect(() => {
-    const video = videoRef.current;
-    if (!video) return;
+    loadVideoData();
+  }, [videoId]);
 
-    const handleLoadedMetadata = () => {
-      setDuration(video.duration);
+  const loadVideoData = async () => {
+    try {
+      setIsLoading(true);
+      setError('');
+      
+                      // Load video details
+        const videoData = await videoAPI.getVideoById(videoId);
+        setVideo(videoData);
+        setLikeCount(videoData.likesCount || 0);
+        
+        // Load comments
+        try {
+          const commentsResponse = await commentAPI.getComments(videoId);
+          if (commentsResponse.success) {
+            setComments(commentsResponse.data.comments || []);
+          } else {
+            setComments([]);
+          }
+        } catch (error) {
+          console.log('Comments API not available, using empty array');
+          setComments([]);
+        }
+        
+        // Load recommendations
+        const recommendationsData = await videoAPI.getAllVideos();
+        setRecommendations(recommendationsData.filter(v => v._id !== videoId).slice(0, 10));
+      
+              // Check if user liked the video
+        if (user) {
+          try {
+            const likedResponse = await likeAPI.getLikedVideos(user._id);
+            if (likedResponse.likedVideos) {
+              setIsLiked(likedResponse.likedVideos.some(v => v._id === videoId));
+            }
+          } catch (error) {
+            console.log('Like API not available');
+          }
+        }
+      
+    } catch (error) {
+      setError('Failed to load video');
+      console.error('Error loading video:', error);
+    } finally {
       setIsLoading(false);
-    };
-
-    const handleTimeUpdate = () => {
-      setCurrentTime(video.currentTime);
-    };
-
-    const handlePlay = () => setIsPlaying(true);
-    const handlePause = () => setIsPlaying(false);
-    const handleVolumeChange = () => {
-      setVolume(video.volume);
-      setIsMuted(video.muted);
-    };
-
-    video.addEventListener("loadedmetadata", handleLoadedMetadata);
-    video.addEventListener("timeupdate", handleTimeUpdate);
-    video.addEventListener("play", handlePlay);
-    video.addEventListener("pause", handlePause);
-    video.addEventListener("volumechange", handleVolumeChange);
-
-    if (autoPlay) {
-      video.play().catch(() => {
-        // Auto-play was prevented
-        setIsLoading(false);
-      });
-    }
-
-    return () => {
-      video.removeEventListener("loadedmetadata", handleLoadedMetadata);
-      video.removeEventListener("timeupdate", handleTimeUpdate);
-      video.removeEventListener("play", handlePlay);
-      video.removeEventListener("pause", handlePause);
-      video.removeEventListener("volumechange", handleVolumeChange);
-    };
-  }, [autoPlay]);
-
-  useEffect(() => {
-    const handleFullscreenChange = () => {
-      setIsFullscreen(!!document.fullscreenElement);
-    };
-
-    document.addEventListener("fullscreenchange", handleFullscreenChange);
-    return () => {
-      document.removeEventListener("fullscreenchange", handleFullscreenChange);
-    };
-  }, []);
-
-  const togglePlay = () => {
-    const video = videoRef.current;
-    if (video.paused) {
-      video.play();
-    } else {
-      video.pause();
     }
   };
 
-  const handleSeek = (e) => {
-    const video = videoRef.current;
-    const rect = e.currentTarget.getBoundingClientRect();
-    const clickX = e.clientX - rect.left;
-    const width = rect.width;
-    const newTime = (clickX / width) * duration;
-    video.currentTime = newTime;
-  };
+  const handleLike = async () => {
+    if (!user) {
+      navigate('/login');
+      return;
+    }
 
-  const toggleMute = () => {
-    const video = videoRef.current;
-    video.muted = !video.muted;
-  };
-
-  const handleVolumeChange = (e) => {
-    const video = videoRef.current;
-    const newVolume = parseFloat(e.target.value);
-    video.volume = newVolume;
-    video.muted = newVolume === 0;
-  };
-
-  const toggleFullscreen = () => {
-    if (!document.fullscreenElement) {
-      containerRef.current?.requestFullscreen();
-    } else {
-      document.exitFullscreen();
+    try {
+      await likeAPI.toggleLike(videoId, user._id);
+      
+      // Update local state
+      setIsLiked(!isLiked);
+      setLikeCount(prev => isLiked ? prev - 1 : prev + 1);
+      
+      // Show success message
+      setMessage({ type: 'success', text: isLiked ? 'Video unliked' : 'Video liked!' });
+      setTimeout(() => setMessage(null), 2000);
+    } catch (error) {
+      console.error('Error toggling like:', error);
+      setMessage({ type: 'error', text: 'Failed to update like' });
+      setTimeout(() => setMessage(null), 3000);
     }
   };
 
-  const showControlsTemporarily = () => {
-    setShowControls(true);
-    if (controlsTimeoutRef.current) {
-      clearTimeout(controlsTimeoutRef.current);
+  const handleComment = async (e) => {
+    e.preventDefault();
+    if (!user) {
+      navigate('/login');
+      return;
     }
-    controlsTimeoutRef.current = setTimeout(() => {
-      if (isPlaying) {
-        setShowControls(false);
+
+    if (!commentText.trim()) return;
+
+    try {
+      const response = await commentAPI.addComment(videoId, user._id, commentText);
+      
+      if (response.success) {
+        // Add the new comment to the list
+        const newComment = {
+          _id: response.data._id,
+          content: commentText,
+          user: user,
+          createdAt: response.data.createdAt,
+          likes: [],
+          replies: []
+        };
+        
+        setComments(prev => [newComment, ...prev]);
+        setCommentText('');
+        
+        // Show success message
+        setMessage({ type: 'success', text: 'Comment added successfully!' });
+        setTimeout(() => setMessage(null), 2000);
       }
-    }, 3000);
-  };
-
-  const formatTime = (time) => {
-    const minutes = Math.floor(time / 60);
-    const seconds = Math.floor(time % 60);
-    return `${minutes}:${seconds.toString().padStart(2, "0")}`;
-  };
-
-  const handleKeyDown = (e) => {
-    const video = videoRef.current;
-    switch (e.key) {
-      case " ":
-        e.preventDefault();
-        togglePlay();
-        break;
-      case "ArrowLeft":
-        e.preventDefault();
-        video.currentTime = Math.max(0, video.currentTime - 10);
-        break;
-      case "ArrowRight":
-        e.preventDefault();
-        video.currentTime = Math.min(duration, video.currentTime + 10);
-        break;
-      case "ArrowUp":
-        e.preventDefault();
-        video.volume = Math.min(1, video.volume + 0.1);
-        break;
-      case "ArrowDown":
-        e.preventDefault();
-        video.volume = Math.max(0, video.volume - 0.1);
-        break;
-      case "f":
-        e.preventDefault();
-        toggleFullscreen();
-        break;
-      case "m":
-        e.preventDefault();
-        toggleMute();
-        break;
-      default:
-        break;
+    } catch (error) {
+      console.error('Error adding comment:', error);
+      setMessage({ type: 'error', text: 'Failed to add comment' });
+      setTimeout(() => setMessage(null), 3000);
     }
   };
+
+  const handleShare = () => {
+    const videoUrl = `${window.location.origin}/video/${videoId}`;
+    if (navigator.share) {
+      navigator.share({
+        title: video?.title || 'Check out this video',
+        text: video?.description || 'Amazing video on StreamHub',
+        url: videoUrl
+      });
+    } else {
+      navigator.clipboard.writeText(videoUrl);
+      alert('Video URL copied to clipboard!');
+    }
+  };
+
+  const handleSubscribe = () => {
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+    setIsSubscribed(!isSubscribed);
+    // TODO: Implement subscription API
+  };
+
+  const handleCommentLike = async (commentId) => {
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+
+    try {
+      await commentAPI.toggleCommentLike(commentId, user._id);
+      
+      // Update the comment in the list
+      setComments(prev => prev.map(comment => {
+        if (comment._id === commentId) {
+          // Toggle like status (simplified - in real app you'd get the updated comment from API)
+          const isLiked = comment.likes?.some(like => like === user._id);
+          if (isLiked) {
+            return {
+              ...comment,
+              likes: comment.likes?.filter(like => like !== user._id) || []
+            };
+          } else {
+            return {
+              ...comment,
+              likes: [...(comment.likes || []), user._id]
+            };
+          }
+        }
+        return comment;
+      }));
+      
+      setMessage({ type: 'success', text: 'Comment like updated!' });
+      setTimeout(() => setMessage(null), 2000);
+    } catch (error) {
+      console.error('Error toggling comment like:', error);
+      setMessage({ type: 'error', text: 'Failed to update comment like' });
+      setTimeout(() => setMessage(null), 3000);
+    }
+  };
+
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInDays = Math.floor((now - date) / (1000 * 60 * 60 * 24));
+    
+    if (diffInDays === 0) return 'Today';
+    if (diffInDays === 1) return 'Yesterday';
+    if (diffInDays < 7) return `${diffInDays} days ago`;
+    if (diffInDays < 30) return `${Math.floor(diffInDays / 7)} weeks ago`;
+    if (diffInDays < 365) return `${Math.floor(diffInDays / 30)} months ago`;
+    return `${Math.floor(diffInDays / 365)} years ago`;
+  };
+
+  const formatNumber = (num) => {
+    if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
+    if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
+    return num.toString();
+  };
+
+  const formatDuration = (seconds) => {
+    if (!seconds) return '0:00';
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = Math.floor(seconds % 60);
+    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+  };
+
+  if (isLoading) {
+    return (
+      <div className="video-player-loading">
+        <div className="loading-spinner"></div>
+        <p>Loading video...</p>
+      </div>
+    );
+  }
+
+  if (error || !video) {
+    return (
+      <div className="video-player-error">
+        <h2>Video not found</h2>
+        <p>{error || 'This video may have been removed or is private.'}</p>
+        <button onClick={() => navigate('/user/home')} className="back-btn">
+          Go Home
+        </button>
+      </div>
+    );
+  }
 
   return (
-    <div
-      className="video-player-overlay"
-      onClick={showControlsTemporarily}
-      onKeyDown={handleKeyDown}
-      tabIndex={0}
-    >
-      <div className="video-player-container" ref={containerRef}>
-        <div className="video-player-header">
-          <button className="close-btn" onClick={onClose}>
-            <svg
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
+    <div className="video-player-container">
+      {/* Message Display */}
+      {message && (
+        <div className={`message ${message.type}`}>
+          {message.text}
+        </div>
+      )}
+      
+      <div className="video-player-main">
+        {/* Video Player */}
+        <div className="video-player-section">
+          <div className="video-player-wrapper">
+            <video
+              className="video-player"
+              controls
+              poster={video.thumbnail}
+              src={video.videoUrl}
             >
-              <path
-                d="M18 6L6 18M6 6L18 18"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </button>
-        </div>
-
-        <div className="video-wrapper">
-          <video
-            ref={videoRef}
-            src={src}
-            poster={poster}
-            className="video-element"
-            onClick={togglePlay}
-          />
-
-          {isLoading && (
-            <div className="loading-overlay">
-              <div className="loading-spinner"></div>
-            </div>
-          )}
-        </div>
-
-        <div className={`video-controls ${showControls ? "show" : "hide"}`}>
-          <div className="progress-bar" onClick={handleSeek}>
-            <div
-              className="progress-fill"
-              style={{ width: `${(currentTime / duration) * 100}%` }}
-            />
+              Your browser does not support the video tag.
+            </video>
           </div>
 
-          <div className="controls-main">
-            <div className="controls-left">
-              <button className="control-btn" onClick={togglePlay}>
-                {isPlaying ? (
-                  <svg
-                    width="20"
-                    height="20"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      d="M6 4H10V20H6V4ZM14 4H18V20H14V4Z"
-                      fill="currentColor"
-                    />
-                  </svg>
-                ) : (
-                  <svg
-                    width="20"
-                    height="20"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path d="M8 5V19L19 12L8 5Z" fill="currentColor" />
-                  </svg>
-                )}
-              </button>
-
-              <div className="time-display">
-                {formatTime(currentTime)} / {formatTime(duration)}
+          {/* Video Info */}
+          <div className="video-info">
+            <h1 className="video-title">{video.title}</h1>
+            
+            <div className="video-stats">
+              <div className="video-meta">
+                <span className="view-count">{formatNumber(video.views || 0)} views</span>
+                <span className="upload-date">{formatDate(video.createdAt)}</span>
               </div>
-            </div>
-
-            <div className="controls-right">
-              <div className="volume-control">
-                <button className="control-btn" onClick={toggleMute}>
-                  {isMuted || volume === 0 ? (
-                    <svg
-                      width="20"
-                      height="20"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        d="M11 5L6 9H2V15H6L11 19V5Z"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                      <path
-                        d="M23 9L17 15"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                      <path
-                        d="M17 9L23 15"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  ) : (
-                    <svg
-                      width="20"
-                      height="20"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        d="M11 5L6 9H2V15H6L11 19V5Z"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                      <path
-                        d="M15.54 8.46C16.4774 9.39764 17.0039 10.7536 17.0039 12.15C17.0039 13.5464 16.4774 14.9024 15.54 15.84"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                      <path
-                        d="M19.07 4.93C20.9447 6.80528 21.9979 9.34836 21.9979 12C21.9979 14.6516 20.9447 17.1947 19.07 19.07"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  )}
+              
+              <div className="video-actions">
+                <button 
+                  className={`action-btn like-btn ${isLiked ? 'liked' : ''}`}
+                  onClick={handleLike}
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M20.84 4.61C20.3292 4.099 19.7228 3.69364 19.0554 3.41708C18.3879 3.14052 17.6725 2.99817 16.95 2.99817C16.2275 2.99817 15.5121 3.14052 14.8446 3.41708C14.1772 3.69364 13.5708 4.099 13.06 4.61L12 5.67L10.94 4.61C9.9083 3.5783 8.50903 2.9987 7.05 2.9987C5.59096 2.9987 4.19169 3.5783 3.16 4.61C2.1283 5.6417 1.5487 7.04097 1.5487 8.5C1.5487 9.95903 2.1283 11.3583 3.16 12.39L12 21.23L20.84 12.39C21.351 11.8792 21.7564 11.2728 22.0329 10.6054C22.3095 9.93789 22.4518 9.22249 22.4518 8.5C22.4518 7.77751 22.3095 7.0621 22.0329 6.39464C21.7564 5.72718 21.351 5.12075 20.84 4.61Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                  {formatNumber(likeCount)}
                 </button>
-                <input
-                  type="range"
-                  min="0"
-                  max="1"
-                  step="0.1"
-                  value={isMuted ? 0 : volume}
-                  onChange={handleVolumeChange}
-                  className="volume-slider"
-                />
+                
+                <button className="action-btn dislike-btn">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M3.16 19.39C3.6708 19.901 4.2772 20.3064 4.9446 20.5829C5.6121 20.8595 6.3275 21.0018 7.05 21.0018C7.7725 21.0018 8.4879 20.8595 9.1554 20.5829C9.8228 20.3064 10.4292 19.901 10.94 19.39L12 18.33L13.06 19.39C14.0917 20.4217 15.491 21.0013 16.95 21.0013C18.409 21.0013 19.8083 20.4217 20.84 19.39C21.8717 18.3583 22.4513 16.959 22.4513 15.5C22.4513 14.041 21.8717 12.6417 20.84 11.61L12 2.77L3.16 11.61C2.649 12.1208 2.2436 12.7272 1.9671 13.3946C1.6905 14.0621 1.5482 14.7775 1.5482 15.5C1.5482 16.2225 1.6905 16.9379 1.9671 17.6054C2.2436 18.2728 2.649 18.8792 3.16 19.39Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </button>
+                
+                <button className="action-btn" onClick={() => setShowComments(!showComments)}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M21 15C21 15.5304 20.7893 16.0391 20.4142 16.4142C20.0391 16.7893 19.5304 17 19 17H7L3 21V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H19C19.5304 3 20.0391 3.21071 20.4142 3.58579C20.7893 3.96086 21 4.46957 21 5V15Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                  {formatNumber(comments.length)}
+                </button>
+                
+                <button className="action-btn" onClick={handleShare}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M4 12V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M16 6L12 2L8 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M12 2V15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                  Share
+                </button>
               </div>
+            </div>
+          </div>
 
-              <button className="control-btn" onClick={toggleFullscreen}>
-                {isFullscreen ? (
-                  <svg
-                    width="20"
-                    height="20"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      d="M8 3V8H3M16 3V8H21M8 21V16H3M16 21V16H21"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                ) : (
-                  <svg
-                    width="20"
-                    height="20"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      d="M8 3H5C4.46957 3 3.96086 3.21071 3.58579 3.58579C3.21071 3.96086 3 4.46957 3 5V8M21 8V5C21 4.46957 20.7893 3.96086 20.4142 3.58579C20.0391 3.21071 19.5304 3 19 3H16M16 21H19C19.5304 21 20.0391 20.7893 20.4142 20.4142C20.7893 20.0391 21 19.5304 21 19V16M8 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V16"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                )}
-              </button>
+          {/* Channel Info */}
+          <div className="channel-info">
+            <div className="channel-avatar">
+              {video.owner?.profileimage ? (
+                <img src={video.owner.profileimage} alt={video.owner.fullname} />
+              ) : (
+                <span>{video.owner?.fullname?.charAt(0) || 'C'}</span>
+              )}
+            </div>
+            <div className="channel-details">
+              <h3 className="channel-name">{video.owner?.fullname || 'Unknown Creator'}</h3>
+              <p className="subscriber-count">{formatNumber(video.owner?.subscribers || 0)} subscribers</p>
+            </div>
+            <button 
+              className={`subscribe-btn ${isSubscribed ? 'subscribed' : ''}`}
+              onClick={handleSubscribe}
+            >
+              {isSubscribed ? 'Subscribed' : 'Subscribe'}
+            </button>
+          </div>
+
+          {/* Video Description */}
+          <div className="video-description">
+            <div className="description-text">
+              <p>{video.description || 'No description available.'}</p>
             </div>
           </div>
         </div>
 
-        <div className="video-info">
-          <h2 className="video-title">{title}</h2>
-          <div className="video-meta">
-            <span className="channel-name">{channel}</span>
-            <span className="video-stats">
-              {views} views • {date}
-            </span>
+        {/* Comments Section */}
+        {showComments && (
+          <div className="comments-section">
+            <h3 className="comments-title">
+              Comments ({comments.length})
+            </h3>
+            
+            {/* Add Comment */}
+            <div className="add-comment">
+              <div className="comment-avatar">
+                {user?.profileimage ? (
+                  <img src={user.profileimage} alt={user.fullname} />
+                ) : (
+                  <span>{user?.fullname?.charAt(0) || 'U'}</span>
+                )}
+              </div>
+              <form onSubmit={handleComment} className="comment-form">
+                <input
+                  type="text"
+                  placeholder="Add a comment..."
+                  value={commentText}
+                  onChange={(e) => setCommentText(e.target.value)}
+                  className="comment-input"
+                />
+                <button type="submit" className="comment-submit" disabled={!commentText.trim()}>
+                  Comment
+                </button>
+              </form>
+            </div>
+
+            {/* Comments List */}
+            <div className="comments-list">
+              {comments.map((comment) => (
+                <div key={comment._id} className="comment-item">
+                  <div className="comment-avatar">
+                    {comment.user?.profileimage ? (
+                      <img src={comment.user.profileimage} alt={comment.user.fullname} />
+                    ) : (
+                      <span>{comment.user?.fullname?.charAt(0) || 'U'}</span>
+                    )}
+                  </div>
+                  <div className="comment-content">
+                    <div className="comment-header">
+                      <span className="comment-author">{comment.user?.fullname || 'Anonymous'}</span>
+                      <span className="comment-date">{formatDate(comment.createdAt)}</span>
+                    </div>
+                    <p className="comment-text">{comment.content || comment.comment}</p>
+                    <div className="comment-actions">
+                      <button 
+                        className="comment-like-btn"
+                        onClick={() => handleCommentLike(comment._id)}
+                      >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M20.84 4.61C20.3292 4.099 19.7228 3.69364 19.0554 3.41708C18.3879 3.14052 17.6725 2.99817 16.95 2.99817C16.2275 2.99817 15.5121 3.14052 14.8446 3.41708C14.1772 3.69364 13.5708 4.099 13.06 4.61L12 5.67L10.94 4.61C9.9083 3.5783 8.50903 2.9987 7.05 2.9987C5.59096 2.9987 4.19169 3.5783 3.16 4.61C2.1283 5.6417 1.5487 7.04097 1.5487 8.5C1.5487 9.95903 2.1283 11.3583 3.16 12.39L12 21.23L20.84 12.39C21.351 11.8792 21.7564 11.2728 22.0329 10.6054C22.3095 9.93789 22.4518 9.22249 22.4518 8.5C22.4518 7.77751 22.3095 7.0621 22.0329 6.39464C21.7564 5.72718 21.351 5.12075 20.84 4.61Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                        {formatNumber(comment.likes?.length || 0)}
+                      </button>
+                      <button className="comment-reply-btn">Reply</button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
+        )}
+      </div>
+
+      {/* Recommendations Sidebar */}
+      <div className="video-recommendations">
+        <h3 className="recommendations-title">Recommended</h3>
+        <div className="recommendations-list">
+          {recommendations.map((recVideo) => (
+            <div 
+              key={recVideo._id} 
+              className="recommendation-item"
+              onClick={() => navigate(`/video/${recVideo._id}`)}
+            >
+              <div className="recommendation-thumbnail">
+                <img src={recVideo.thumbnail} alt={recVideo.title} />
+                                 <span className="video-duration">{formatDuration(recVideo.duration)}</span>
+              </div>
+                             <div className="recommendation-info">
+                 <h4 className="recommendation-title">{recVideo.title}</h4>
+                 <p className="recommendation-channel">{recVideo.owner?.fullname || 'Unknown'}</p>
+                 <p className="recommendation-stats">
+                   {formatNumber(recVideo.views || 0)} views • {formatDate(recVideo.createdAt)}
+                 </p>
+               </div>
+            </div>
+          ))}
         </div>
       </div>
     </div>
   );
-};
-
-export default VideoPlayer;
+}

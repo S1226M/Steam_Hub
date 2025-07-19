@@ -71,13 +71,32 @@
   padding: 0;
 }
 
+/* Fallback styles in case CSS variables don't load */
+html {
+  background-color: #fafbfc;
+  color: #2d3143;
+}
+
+body {
+  background-color: #fafbfc !important;
+  color: #2d3143 !important;
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+}
+
+#root {
+  min-height: 100vh;
+  background-color: #fafbfc;
+}
+
 html {
   font-size: 16px;
   scroll-behavior: smooth;
 }
 
 body {
-  font-family: var(--font-family);
+  font-family: var(--font-family), 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
   line-height: 1.6;
   font-weight: 400;
   color: var(--text-primary);
@@ -86,6 +105,8 @@ body {
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
   overflow-x: hidden;
+  margin: 0;
+  padding: 0;
 }
 
 /* Typography */
