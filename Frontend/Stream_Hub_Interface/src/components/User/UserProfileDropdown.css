@@ -120,6 +120,27 @@
   color: var(--accent-color);
 }
 
+.dropdown-item.premium-upgrade {
+  background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+  color: #8b4513;
+  font-weight: 600;
+  margin: 8px 0;
+  border-radius: 8px;
+  margin-left: 8px;
+  margin-right: 8px;
+  width: calc(100% - 16px);
+}
+
+.dropdown-item.premium-upgrade:hover {
+  background: linear-gradient(135deg, #ffed4e 0%, #ffd700 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(255, 215, 0, 0.3);
+}
+
+.dropdown-item.premium-upgrade svg {
+  color: #8b4513;
+}
+
 .dropdown-divider {
   height: 1px;
   background: var(--border-color);

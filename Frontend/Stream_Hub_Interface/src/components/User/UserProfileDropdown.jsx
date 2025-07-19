@@ -1,12 +1,20 @@
 import React, { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
+import { useNavigate } from "react-router-dom";
 import "./UserProfileDropdown.css";
 
-const UserProfileDropdown = ({ isOpen, onClose, user, triggerRef }) => {
+const UserProfileDropdown = ({
+  isOpen,
+  onClose,
+  user,
+  triggerRef,
+  onUpgradeClick,
+}) => {
   const [dropdownPosition, setDropdownPosition] = useState({
     top: 0,
     right: 0,
   });
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (isOpen && triggerRef?.current) {
@@ -24,18 +32,29 @@ const UserProfileDropdown = ({ isOpen, onClose, user, triggerRef }) => {
     // Add logout logic here
     console.log("Logging out...");
     onClose();
+    // Navigate to login page or clear auth
+    navigate("/login");
   };
 
   const handleProfileClick = () => {
     // Navigate to profile page
     console.log("Navigate to profile");
     onClose();
+    navigate("/user/profile");
   };
 
   const handleSettingsClick = () => {
     // Navigate to settings page
     console.log("Navigate to settings");
     onClose();
+    navigate("/user/settings");
+  };
+
+  const handleUpgradeClick = () => {
+    onClose();
+    if (onUpgradeClick) {
+      onUpgradeClick();
+    }
   };
 
   const dropdownContent = (
@@ -133,6 +152,30 @@ const UserProfileDropdown = ({ isOpen, onClose, user, triggerRef }) => {
             </svg>
             Settings
           </button>
+
+          {!user.premium && (
+            <button
+              className="dropdown-item premium-upgrade"
+              onClick={handleUpgradeClick}
+            >
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M12 2L15.09 8.26L22 9L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9L8.91 8.26L12 2Z"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+              Upgrade to Premium
+            </button>
+          )}
 
           <div className="dropdown-divider"></div>
 

@@ -1,20 +1,24 @@
 // File: UserLayout.jsx
 import React, { useState, useRef } from "react";
-import { Outlet, NavLink } from "react-router-dom";
+import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import UserProfileDropdown from "../../components/User/UserProfileDropdown";
+import PremiumUpgradeModal from "../../components/User/PremiumUpgradeModal";
 import "./UserLayout.css";
 
 export default function UserLayout() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
+  const [isPremiumModalOpen, setIsPremiumModalOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const profileButtonRef = useRef(null);
+  const navigate = useNavigate();
 
   // Mock user data - replace with actual user data from your auth system
   const [user] = useState({
     name: "John Doe",
     email: "john.doe@example.com",
     avatar: null, // Add user avatar URL here
-    premium: true,
+    premium: false, // Changed to false to show upgrade option
   });
 
   const toggleMobileMenu = () => {
@@ -31,6 +35,21 @@ export default function UserLayout() {
 
   const closeProfileDropdown = () => {
     setIsProfileDropdownOpen(false);
+  };
+
+  const handleUpgradeClick = () => {
+    setIsPremiumModalOpen(true);
+  };
+
+  const closePremiumModal = () => {
+    setIsPremiumModalOpen(false);
+  };
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      navigate(`/user/search?q=${encodeURIComponent(searchQuery.trim())}`);
+    }
   };
 
   return (
@@ -62,13 +81,15 @@ export default function UserLayout() {
           <h2 className="logo">StreamHub</h2>
         </div>
 
-        <div className="search-container">
+        <form className="search-container" onSubmit={handleSearch}>
           <input
             type="text"
             className="search-bar"
             placeholder="Search videos..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
           />
-          <button className="search-btn">
+          <button type="submit" className="search-btn">
             <svg
               width="16"
               height="16"
@@ -85,7 +106,7 @@ export default function UserLayout() {
               />
             </svg>
           </button>
-        </div>
+        </form>
 
         <div className="user-profile">
           <button
@@ -115,6 +136,13 @@ export default function UserLayout() {
         onClose={closeProfileDropdown}
         user={user}
         triggerRef={profileButtonRef}
+        onUpgradeClick={handleUpgradeClick}
+      />
+
+      {/* Premium Upgrade Modal */}
+      <PremiumUpgradeModal
+        isOpen={isPremiumModalOpen}
+        onClose={closePremiumModal}
       />
 
       {/* Main Layout */}

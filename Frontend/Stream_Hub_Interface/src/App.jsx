@@ -7,6 +7,8 @@ import Home from "./components/User/Home";
 import Explore from "./components/User/Explore";
 import Subscriptions from "./components/User/Subscriptions";
 import Library from "./components/User/Library";
+import UserProfile from "./components/User/UserProfile";
+import Search from "./components/User/Search";
 
 function App() {
   return (
@@ -22,6 +24,8 @@ function App() {
           <Route path="explore" element={<Explore />} />
           <Route path="subscriptions" element={<Subscriptions />} />
           <Route path="library" element={<Library />} />
+          <Route path="profile" element={<UserProfile />} />
+          <Route path="search" element={<Search />} />
           <Route
             path="history"
             element={
