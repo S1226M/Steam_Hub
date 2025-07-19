@@ -8,6 +8,7 @@ const videoSchema = new mongoose.Schema({
   duration:    { type: Number },
   owner:       { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true, index: true },
   views:       { type: Number, default: 0 },
+  likesCount:  { type: Number, default: 0 },
   isPublic:    { type: Boolean, default: true },
   isPremium:   { type: Boolean, default: false },
   category:    { 
