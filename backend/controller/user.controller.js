@@ -1,4 +1,9 @@
-const User = require('../models/user.model');
+import express from "express";
+import User from "../model/user.model.js"; 
+
+
+// const User = require('../model/user.model.js');
+// const User = require('../model/user.model.js');
 
 // Fetch all users (Admin)
 const getAllUsers = async (req, res) => {
@@ -22,3 +27,8 @@ const getUserById = async (req, res) => {
         res.status(500).json({ message: "Error fetching user", error: error.message });
     }
 };
+
+export default {
+    getAllUsers,
+    getUserById 
+}
