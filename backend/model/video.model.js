@@ -1,3 +1,5 @@
+import mongoose from "mongoose";
+
 const videoSchema = new mongoose.Schema({
   title:       { type: String, required: true },
   description: { type: String },
@@ -8,7 +10,13 @@ const videoSchema = new mongoose.Schema({
   views:       { type: Number, default: 0 },
   isPublic:    { type: Boolean, default: true },
   isPremium:   { type: Boolean, default: false },
-  category:    { type: String, enum: ["Education", "Music", "Technology", "Entertainment", "Lifestyle", "General"], default: "General" }
+  category:    { 
+    type: String,
+    enum: ["Education", "Music", "Technology", "Entertainment", "Lifestyle", "General"],
+    default: "General"
+  },
+  public_id:   { type: String, required: true }
 }, { timestamps: true });
 
-export const Video = mongoose.model("Video", videoSchema);
+const Video = mongoose.model("Video", videoSchema);
+export default Video;
