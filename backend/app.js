@@ -9,6 +9,8 @@ import userRoutes from "./route/user.route.js";
 import likeRoutes from "./route/like.route.js";
 import playlistRoutes from "./route/playlist.route.js";
 import commentRoutes from "./route/comment.route.js";
+import subscriptionRoutes from "./route/subscription.route.js";
+import adminRoutes from "./route/admin.route.js";
 
 // ✅ Initialize dotenv
 dotenv.config();
@@ -29,6 +31,8 @@ app.use("/api/users", userRoutes);
 app.use("/api/likes", likeRoutes);
 app.use("/api/playlists", playlistRoutes);
 app.use("/api/comments", commentRoutes);
+app.use("/api/subscriptions", subscriptionRoutes);
+app.use("/api/admins", adminRoutes);
 
 // ✅ Start server
 const PORT = process.env.PORT || 5000;
