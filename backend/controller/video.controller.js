@@ -3,12 +3,6 @@ import { v2 as cloudinary } from "cloudinary";
 import Video from "../model/video.model.js";
 import mongoose from "mongoose";
 
-// Upload
-import fs from "fs";
-import { v2 as cloudinary } from "cloudinary";
-import Video from "../model/video.model.js";
-import mongoose from "mongoose";
-
 // Upload Video (requires authenticated user in req.user)
 export const uploadVideo = async (req, res) => {
   try {
