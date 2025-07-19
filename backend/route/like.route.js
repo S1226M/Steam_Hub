@@ -1,6 +1,6 @@
 import express from "express";
-import { toggleVideoLike, getLikedVideos } from "../controllers/likeController.js";
-import { isAuthenticated } from "../middlewares/authMiddleware.js"; // assumed
+import { toggleVideoLike, getLikedVideos } from "../controller/like.controller.js";
+// import { isAuthenticated } from "../middlewares/authMiddleware.js"; // assumed
 
 const router = express.Router();
 

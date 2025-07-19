@@ -1,7 +1,13 @@
 import express from "express";
 import dotenv from "dotenv";
-import { connectDB } from "./db/connection"
-import userRoutes from "./route/user.route"; // adjust if you have more
+import { connectDB } from "./db/connection.js";
+
+import userRoutes from "./route/user.route.js";
+import likeRoutes from "./route/like.route.js";
+// Add additional routes here as you create them
+// import videoRoutes from "./route/video.route.js";
+// import playlistRoutes from "./route/playlist.route.js";
+// import commentRoutes from "./route/comment.route.js";
 
 dotenv.config();
 
@@ -13,7 +19,10 @@ connectDB();
 
 // Routes
 app.use("/api/users", userRoutes);
+app.use("/api/likes", likeRoutes);
+// app.use("/api/videos", videoRoutes);
+// app.use("/api/playlists", playlistRoutes);
+// app.use("/api/comments", commentRoutes);
 
-// Server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
