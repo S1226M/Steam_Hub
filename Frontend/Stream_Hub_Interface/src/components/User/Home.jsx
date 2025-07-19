@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import "./Home.css";
-import VideoPlayer from "./VideoPlayer";
-import axios from "axios";
+import { videoAPI } from "../../utils/api";
 
 const categories = [
   "All",
@@ -95,11 +95,11 @@ const mockVideos = [
 ];
 
 export default function Home() {
+  const navigate = useNavigate();
   const [selected, setSelected] = useState("All");
   const [videos, setVideos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [selectedVideo, setSelectedVideo] = useState(null);
 
   useEffect(() => {
     const fetchVideos = async () => {
@@ -108,10 +108,10 @@ export default function Home() {
         setError(null);
         
         // Try to fetch from API first
-        const response = await axios.get("http://localhost:5000/api/videos");
+        const videosData = await videoAPI.getAllVideos();
         
-        if (response.data && response.data.length > 0) {
-          setVideos(response.data);
+        if (videosData && videosData.length > 0) {
+          setVideos(videosData);
         } else {
           // Fallback to mock data if API returns empty
           setVideos(mockVideos);
@@ -146,11 +146,33 @@ export default function Home() {
   };
 
   const handleVideoClick = (video) => {
-    setSelectedVideo(video);
+    navigate(`/user/video/${video._id || video.id}`);
   };
 
-  const handleCloseVideo = () => {
-    setSelectedVideo(null);
+  const formatNumber = (num) => {
+    if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
+    if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
+    return num.toString();
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInDays = Math.floor((now - date) / (1000 * 60 * 60 * 24));
+    
+    if (diffInDays === 0) return 'Today';
+    if (diffInDays === 1) return 'Yesterday';
+    if (diffInDays < 7) return `${diffInDays} days ago`;
+    if (diffInDays < 30) return `${Math.floor(diffInDays / 7)} weeks ago`;
+    if (diffInDays < 365) return `${Math.floor(diffInDays / 30)} months ago`;
+    return `${Math.floor(diffInDays / 365)} years ago`;
+  };
+
+  const formatDuration = (seconds) => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = Math.floor(seconds % 60);
+    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
   };
 
   if (loading) {
@@ -209,7 +231,7 @@ export default function Home() {
             {filteredVideos.map((vid) => (
               <div 
                 className="video-card" 
-                key={vid.id}
+                key={vid._id || vid.id}
                 onClick={() => handleVideoClick(vid)}
                 tabIndex={0}
                 onKeyDown={(e) => {
@@ -236,7 +258,7 @@ export default function Home() {
                       Premium
                     </span>
                   )}
-                  <span className="length">{vid.length}</span>
+                  <span className="length">{vid.duration ? formatDuration(vid.duration) : vid.length}</span>
                   <div className="play-overlay">
                     <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                       <path d="M8 5V19L19 12L8 5Z" fill="currentColor"/>
@@ -245,11 +267,11 @@ export default function Home() {
                 </div>
                 <div className="info">
                   <div className="title">{vid.title}</div>
-                  <div className="channel">{vid.channel}</div>
+                  <div className="channel">{vid.owner?.fullname || vid.channel || 'Unknown'}</div>
                   <div className="meta">
-                    <span>{vid.views} views</span>
+                    <span>{formatNumber(vid.views || 0)} views</span>
                     <span className="dot">•</span>
-                    <span>{vid.date}</span>
+                    <span>{formatDate(vid.createdAt) || vid.date}</span>
                   </div>
                 </div>
               </div>
@@ -258,19 +280,6 @@ export default function Home() {
         )}
       </div>
 
-      {/* Video Player Modal */}
-      {selectedVideo && (
-        <VideoPlayer
-          src={selectedVideo.videoUrl}
-          poster={selectedVideo.thumbnail}
-          title={selectedVideo.title}
-          channel={selectedVideo.channel}
-          views={selectedVideo.views}
-          date={selectedVideo.date}
-          onClose={handleCloseVideo}
-          autoPlay={true}
-        />
-      )}
     </div>
   );
 }

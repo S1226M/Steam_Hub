@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 import { connectDB } from "./db/connection.js";
 
 // ✅ Import routes
+import authRoutes from "./route/auth.route.js";
 import videoRoutes from "./route/video.route.js";
 import userRoutes from "./route/user.route.js";
 import likeRoutes from "./route/like.route.js";
@@ -26,6 +27,7 @@ app.use(express.json());     // Body parser
 connectDB();
 
 // ✅ API routes
+app.use("/api/auth", authRoutes);
 app.use("/api/videos", videoRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/likes", likeRoutes);

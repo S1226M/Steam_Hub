@@ -1,24 +1,21 @@
 // File: UserLayout.jsx
 import React, { useState, useRef } from "react";
 import { Outlet, NavLink, useNavigate } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
 import UserProfileDropdown from "../../components/User/UserProfileDropdown";
-import PremiumUpgradeModal from "../../components/User/PremiumUpgradeModal";
 import "./UserLayout.css";
 
 export default function UserLayout() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
-  const [isPremiumModalOpen, setIsPremiumModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const profileButtonRef = useRef(null);
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
 
-  // Mock user data - replace with actual user data from your auth system
-  const [user] = useState({
-    name: "John Doe",
-    email: "john.doe@example.com",
-    avatar: null, // Add user avatar URL here
-    premium: false, // Changed to false to show upgrade option
+  console.log('UserLayout Debug:', {
+    user: !!user,
+    userData: user
   });
 
   const toggleMobileMenu = () => {
@@ -35,14 +32,6 @@ export default function UserLayout() {
 
   const closeProfileDropdown = () => {
     setIsProfileDropdownOpen(false);
-  };
-
-  const handleUpgradeClick = () => {
-    setIsPremiumModalOpen(true);
-  };
-
-  const closePremiumModal = () => {
-    setIsPremiumModalOpen(false);
   };
 
   const handleSearch = (e) => {
@@ -116,10 +105,10 @@ export default function UserLayout() {
             aria-label="Open user profile menu"
             aria-expanded={isProfileDropdownOpen}
           >
-            {user.avatar ? (
-              <img src={user.avatar} alt={user.name} />
+            {user?.profileimage ? (
+              <img src={user.profileimage} alt={user.fullname} />
             ) : (
-              user.name.charAt(0).toUpperCase()
+              user?.fullname?.charAt(0).toUpperCase() || 'U'
             )}
           </button>
         </div>
@@ -136,13 +125,7 @@ export default function UserLayout() {
         onClose={closeProfileDropdown}
         user={user}
         triggerRef={profileButtonRef}
-        onUpgradeClick={handleUpgradeClick}
-      />
-
-      {/* Premium Upgrade Modal */}
-      <PremiumUpgradeModal
-        isOpen={isPremiumModalOpen}
-        onClose={closePremiumModal}
+        onLogout={logout}
       />
 
       {/* Main Layout */}
@@ -209,7 +192,7 @@ export default function UserLayout() {
               </NavLink>
             </li>
             <li>
-              <NavLink to="/explore" className="link" onClick={closeMobileMenu}>
+              <NavLink to="/user/explore" className="link" onClick={closeMobileMenu}>
                 <svg
                   width="20"
                   height="20"
@@ -230,7 +213,7 @@ export default function UserLayout() {
             </li>
             <li>
               <NavLink
-                to="/subscriptions"
+                to="/user/subscriptions"
                 className="link"
                 onClick={closeMobileMenu}
               >
@@ -272,7 +255,7 @@ export default function UserLayout() {
           <h4 className="section-title">Library</h4>
           <ul className="nav-links">
             <li>
-              <NavLink to="/library" className="link" onClick={closeMobileMenu}>
+              <NavLink to="/user/library" className="link" onClick={closeMobileMenu}>
                 <svg
                   width="20"
                   height="20"
@@ -299,7 +282,7 @@ export default function UserLayout() {
               </NavLink>
             </li>
             <li>
-              <NavLink to="/history" className="link" onClick={closeMobileMenu}>
+              <NavLink to="/user/history" className="link" onClick={closeMobileMenu}>
                 <svg
                   width="20"
                   height="20"
@@ -324,7 +307,7 @@ export default function UserLayout() {
               </NavLink>
             </li>
             <li>
-              <NavLink to="/liked" className="link" onClick={closeMobileMenu}>
+              <NavLink to="/user/liked" className="link" onClick={closeMobileMenu}>
                 <svg
                   width="20"
                   height="20"
@@ -345,7 +328,7 @@ export default function UserLayout() {
             </li>
             <li>
               <NavLink
-                to="/downloads"
+                to="/user/downloads"
                 className="link"
                 onClick={closeMobileMenu}
               >
@@ -426,7 +409,7 @@ export default function UserLayout() {
           <ul className="nav-links">
             <li>
               <NavLink
-                to="/settings"
+                to="/user/settings"
                 className="link"
                 onClick={closeMobileMenu}
               >
@@ -456,7 +439,7 @@ export default function UserLayout() {
               </NavLink>
             </li>
             <li>
-              <NavLink to="/help" className="link" onClick={closeMobileMenu}>
+              <NavLink to="/user/help" className="link" onClick={closeMobileMenu}>
                 <svg
                   width="20"
                   height="20"
@@ -484,7 +467,7 @@ export default function UserLayout() {
             </li>
             <li>
               <NavLink
-                to="/feedback"
+                to="/user/feedback"
                 className="link"
                 onClick={closeMobileMenu}
               >

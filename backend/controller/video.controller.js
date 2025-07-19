@@ -41,10 +41,67 @@ export const uploadVideo = async (req, res) => {
 // Fetch all
 export const getAllVideos = async (req, res) => {
   try {
-    const videos = await Video.find().sort({ createdAt: -1 });
-    res.json(videos);
+    const { all } = req.query;
+    
+    // If 'all' parameter is provided, get all videos (including private)
+    const filter = all === 'true' ? {} : { isPublic: true };
+    
+    const videos = await Video.find(filter)
+      .populate('owner', 'fullname username profileimage subscribers')
+      .sort({ createdAt: -1 });
+    
+    // Add default owner info for videos without owner
+    const videosWithDefaultOwner = videos.map(video => {
+      if (!video.owner) {
+        return {
+          ...video.toObject(),
+          owner: {
+            _id: null,
+            fullname: 'Unknown Creator',
+            username: 'unknown',
+            profileimage: null,
+            subscribers: 0
+          }
+        };
+      }
+      return video;
+    });
+    
+    console.log(`📊 Found ${videosWithDefaultOwner.length} videos (filter: ${JSON.stringify(filter)})`);
+    res.json(videosWithDefaultOwner);
   } catch (err) {
     console.error("❌ Fetch error:", err.message);
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// Fetch by ID
+export const getVideoById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid video ID" });
+    }
+
+    const video = await Video.findById(id)
+      .populate('owner', 'fullname username profileimage subscribers')
+      .lean();
+
+    if (!video) {
+      return res.status(404).json({ message: "Video not found" });
+    }
+
+    if (!video.isPublic) {
+      return res.status(403).json({ message: "Video is private" });
+    }
+
+    // Increment view count
+    await Video.findByIdAndUpdate(id, { $inc: { views: 1 } });
+
+    res.json(video);
+  } catch (err) {
+    console.error("❌ Fetch by ID error:", err.message);
     res.status(500).json({ error: err.message });
   }
 };

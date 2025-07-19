@@ -29,8 +29,7 @@ const UserProfileDropdown = ({
   if (!isOpen) return null;
 
   const handleLogout = () => {
-    // Add logout logic here
-    console.log("Logging out...");
+    onLogout();
     onClose();
     // Navigate to login page or clear auth
     navigate("/login");
@@ -70,16 +69,16 @@ const UserProfileDropdown = ({
         <div className="dropdown-header">
           <div className="user-info">
             <div className="user-avatar">
-              {user.avatar ? (
-                <img src={user.avatar} alt={user.name} />
+              {user?.profileimage ? (
+                <img src={user.profileimage} alt={user.fullname} />
               ) : (
-                <span>{user.name.charAt(0).toUpperCase()}</span>
+                <span>{user?.fullname?.charAt(0).toUpperCase() || 'U'}</span>
               )}
             </div>
             <div className="user-details">
-              <h4>{user.name}</h4>
-              <p>{user.email}</p>
-              {user.premium && (
+              <h4>{user?.fullname || 'User'}</h4>
+              <p>{user?.email || 'user@example.com'}</p>
+              {user?.subscription === 'premium' && (
                 <span className="premium-indicator">
                   <svg
                     width="12"
