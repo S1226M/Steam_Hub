@@ -33,9 +33,9 @@ const makeRequest = async (endpoint, options = {}) => {
 export const videoAPI = {
   getAllVideos: () => makeRequest('/videos'),
   getVideoById: (id) => makeRequest(`/videos/${id}`),
-  uploadVideo: (formData) => {
+  uploadVideo: (formData, endpoint = '/upload') => {
     const token = localStorage.getItem('token');
-    return fetch(`${API_BASE_URL}/videos/upload`, {
+    return fetch(`${API_BASE_URL}/videos${endpoint}`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -127,15 +127,17 @@ export const commentAPI = {
 
 // User API
 export const userAPI = {
-  getProfile: () => makeRequest('/users/profile'),
-  updateProfile: (userData) => makeRequest('/users/profile', {
+  getProfile: () => makeRequest('/auth/profile'),
+  updateProfile: (userData) => makeRequest('/auth/profile', {
     method: 'PUT',
     body: JSON.stringify(userData),
   }),
-  changePassword: (passwords) => makeRequest('/users/change-password', {
+  changePassword: (passwords) => makeRequest('/auth/change-password', {
     method: 'PUT',
     body: JSON.stringify(passwords),
   }),
+  getUserStats: () => makeRequest('/users/stats'),
+  getUserById: (id) => makeRequest(`/users/${id}`),
 };
 
 // Channel Subscription API (YouTube-like)
@@ -184,6 +186,47 @@ export const authAPI = {
   }),
 };
 
+// Live Stream API
+export const liveStreamAPI = {
+  create: (data) => makeRequest('/livestream/create', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }),
+  getUserStreams: () => makeRequest('/livestream/user/me'),
+  getStream: (streamId) => makeRequest(`/livestream/${streamId}`),
+  stopStream: (streamId) => makeRequest(`/livestream/${streamId}/stop`, {
+    method: 'POST',
+  }),
+  deleteStream: (streamId) => makeRequest(`/livestream/${streamId}`, {
+    method: 'DELETE',
+  }),
+  getActiveStreams: () => makeRequest('/livestream/active/all'),
+};
+
+// WebRTC Live Stream API
+export const webrtcAPI = {
+  create: (data) => makeRequest('/webrtc/create', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }),
+  getAll: (page = 1, limit = 10, status = 'all') => 
+    makeRequest(`/webrtc/all?page=${page}&limit=${limit}&status=${status}`),
+  getActive: () => makeRequest('/webrtc/active'),
+  getUserStreams: (userId) => makeRequest(`/webrtc/user/${userId}`),
+  getStream: (streamId) => makeRequest(`/webrtc/${streamId}`),
+  startStream: (streamId) => makeRequest(`/webrtc/${streamId}/start`, {
+    method: 'POST',
+  }),
+  stopStream: (streamId) => makeRequest(`/webrtc/${streamId}/stop`, {
+    method: 'POST',
+  }),
+  deleteStream: (streamId) => makeRequest(`/webrtc/${streamId}`, {
+    method: 'DELETE',
+  }),
+};
+
+export { makeRequest };
+
 export default {
   videoAPI,
   likeAPI,
@@ -191,4 +234,6 @@ export default {
   userAPI,
   authAPI,
   subscriptionAPI,
+  liveStreamAPI,
+  webrtcAPI,
 }; 

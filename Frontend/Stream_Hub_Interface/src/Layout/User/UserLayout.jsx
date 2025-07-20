@@ -14,9 +14,9 @@ export default function UserLayout() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
-  console.log('UserLayout Debug:', {
+  console.log("UserLayout Debug:", {
     user: !!user,
-    userData: user
+    userData: user,
   });
 
   const toggleMobileMenu = () => {
@@ -110,7 +110,7 @@ export default function UserLayout() {
             {user?.profileimage ? (
               <img src={user.profileimage} alt={user.fullname} />
             ) : (
-              user?.fullname?.charAt(0).toUpperCase() || 'U'
+              user?.fullname?.charAt(0).toUpperCase() || "U"
             )}
           </button>
         </div>
@@ -194,7 +194,11 @@ export default function UserLayout() {
               </NavLink>
             </li>
             <li>
-              <NavLink to="/user/explore" className="link" onClick={closeMobileMenu}>
+              <NavLink
+                to="/user/explore"
+                className="link"
+                onClick={closeMobileMenu}
+              >
                 <svg
                   width="20"
                   height="20"
@@ -244,6 +248,37 @@ export default function UserLayout() {
                 Subscriptions
               </NavLink>
             </li>
+            <li>
+              <NavLink
+                to="/user/webrtc"
+                className="link"
+                onClick={closeMobileMenu}
+              >
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M15 10L21 6V18L15 14"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  <path
+                    d="M3 6V18C3 18.5304 3.21071 19.0391 3.58579 19.4142C3.96086 19.7893 4.46957 20 5 20H15C15.5304 20 16.0391 19.7893 16.4142 19.4142C16.7893 19.0391 17 18.5304 17 18V6C17 5.46957 16.7893 4.96086 16.4142 4.58579C16.0391 4.21071 15.5304 4 15 4H5C4.46957 4 3.96086 4.21071 3.58579 4.58579C3.21071 4.96086 3 5.46957 3 6Z"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+                Live Stream
+              </NavLink>
+            </li>
           </ul>
 
           <div className="premium-box animate-pop">
@@ -257,7 +292,11 @@ export default function UserLayout() {
           <h4 className="section-title">Library</h4>
           <ul className="nav-links">
             <li>
-              <NavLink to="/user/library" className="link" onClick={closeMobileMenu}>
+              <NavLink
+                to="/user/library"
+                className="link"
+                onClick={closeMobileMenu}
+              >
                 <svg
                   width="20"
                   height="20"
@@ -284,7 +323,11 @@ export default function UserLayout() {
               </NavLink>
             </li>
             <li>
-              <NavLink to="/user/history" className="link" onClick={closeMobileMenu}>
+              <NavLink
+                to="/user/history"
+                className="link"
+                onClick={closeMobileMenu}
+              >
                 <svg
                   width="20"
                   height="20"
@@ -309,7 +352,11 @@ export default function UserLayout() {
               </NavLink>
             </li>
             <li>
-              <NavLink to="/user/liked" className="link" onClick={closeMobileMenu}>
+              <NavLink
+                to="/user/liked"
+                className="link"
+                onClick={closeMobileMenu}
+              >
                 <svg
                   width="20"
                   height="20"
@@ -441,7 +488,11 @@ export default function UserLayout() {
               </NavLink>
             </li>
             <li>
-              <NavLink to="/user/help" className="link" onClick={closeMobileMenu}>
+              <NavLink
+                to="/user/help"
+                className="link"
+                onClick={closeMobileMenu}
+              >
                 <svg
                   width="20"
                   height="20"

@@ -29,9 +29,11 @@ const UserProfileDropdown = ({
   if (!isOpen) return null;
 
   const handleLogout = () => {
-    onLogout();
+    // Clear local storage
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
     onClose();
-    // Navigate to login page or clear auth
+    // Navigate to login page
     navigate("/login");
   };
 
@@ -72,13 +74,13 @@ const UserProfileDropdown = ({
               {user?.profileimage ? (
                 <img src={user.profileimage} alt={user.fullname} />
               ) : (
-                <span>{user?.fullname?.charAt(0).toUpperCase() || 'U'}</span>
+                <span>{user?.fullname?.charAt(0).toUpperCase() || "U"}</span>
               )}
             </div>
             <div className="user-details">
-              <h4>{user?.fullname || 'User'}</h4>
-              <p>{user?.email || 'user@example.com'}</p>
-              {user?.subscription === 'premium' && (
+              <h4>{user?.fullname || "User"}</h4>
+              <p>{user?.email || "user@example.com"}</p>
+              {user?.subscription === "premium" && (
                 <span className="premium-indicator">
                   <svg
                     width="12"

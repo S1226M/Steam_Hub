@@ -10,7 +10,7 @@ const Library = () => {
   const [error, setError] = useState(null);
   const [selectedVideo, setSelectedVideo] = useState(null);
 
-  // Mock library data
+  // Mock library data with realistic thumbnails
   const mockLibraryData = {
     history: [
       {
@@ -20,7 +20,8 @@ const Library = () => {
         views: "2.1M",
         date: "2 days ago",
         length: "12:34",
-        thumbnail: "https://picsum.photos/320/180?random=1",
+        thumbnail:
+          "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=320&h=180&fit=crop",
         videoUrl:
           "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4",
         watchedAt: "2024-01-15T10:30:00Z",
@@ -32,7 +33,8 @@ const Library = () => {
         views: "890K",
         date: "1 week ago",
         length: "18:45",
-        thumbnail: "https://picsum.photos/320/180?random=2",
+        thumbnail:
+          "https://images.unsplash.com/photo-1551183053-bf91a1d81141?w=320&h=180&fit=crop",
         videoUrl:
           "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_2mb.mp4",
         watchedAt: "2024-01-14T15:20:00Z",
@@ -44,7 +46,8 @@ const Library = () => {
         views: "5.2M",
         date: "3 days ago",
         length: "25:12",
-        thumbnail: "https://picsum.photos/320/180?random=3",
+        thumbnail:
+          "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=320&h=180&fit=crop",
         videoUrl:
           "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_5mb.mp4",
         watchedAt: "2024-01-13T20:15:00Z",
@@ -58,7 +61,8 @@ const Library = () => {
         views: "1.4M",
         date: "5 days ago",
         length: "32:18",
-        thumbnail: "https://picsum.photos/320/180?random=4",
+        thumbnail:
+          "https://images.unsplash.com/photo-1537953773345-d172ccf13cf1?w=320&h=180&fit=crop",
         videoUrl:
           "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4",
         likedAt: "2024-01-12T14:45:00Z",
@@ -70,7 +74,8 @@ const Library = () => {
         views: "756K",
         date: "1 day ago",
         length: "28:33",
-        thumbnail: "https://picsum.photos/320/180?random=5",
+        thumbnail:
+          "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=320&h=180&fit=crop",
         videoUrl:
           "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_2mb.mp4",
         likedAt: "2024-01-11T09:30:00Z",
@@ -82,7 +87,8 @@ const Library = () => {
         name: "My Tech Playlist",
         description: "Best tech reviews and tutorials",
         videoCount: 12,
-        thumbnail: "https://picsum.photos/320/180?random=10",
+        thumbnail:
+          "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=320&h=180&fit=crop",
         lastUpdated: "2 days ago",
       },
       {
@@ -90,7 +96,8 @@ const Library = () => {
         name: "Workout Motivation",
         description: "High-energy workout videos",
         videoCount: 8,
-        thumbnail: "https://picsum.photos/320/180?random=11",
+        thumbnail:
+          "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=320&h=180&fit=crop",
         lastUpdated: "1 week ago",
       },
       {
@@ -98,7 +105,8 @@ const Library = () => {
         name: "Cooking Inspiration",
         description: "Delicious recipes to try",
         videoCount: 15,
-        thumbnail: "https://picsum.photos/320/180?random=12",
+        thumbnail:
+          "https://images.unsplash.com/photo-1551183053-bf91a1d81141?w=320&h=180&fit=crop",
         lastUpdated: "3 days ago",
       },
     ],
@@ -327,7 +335,18 @@ const Library = () => {
                     alt={video.title}
                     loading="lazy"
                     onError={(e) => {
-                      e.target.src = "https://picsum.photos/320/180?random=999";
+                      // Use unique fallback based on video ID
+                      const fallbackThumbnails = [
+                        "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=320&h=180&fit=crop&crop=center",
+                        "https://images.unsplash.com/photo-1551183053-bf91a1d81141?w=320&h=180&fit=crop&crop=center",
+                        "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=320&h=180&fit=crop&crop=center",
+                        "https://images.unsplash.com/photo-1537953773345-d172ccf13cf1?w=320&h=180&fit=crop&crop=center",
+                        "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=320&h=180&fit=crop&crop=center",
+                      ];
+                      e.target.src =
+                        fallbackThumbnails[
+                          video.id % fallbackThumbnails.length
+                        ];
                     }}
                   />
                   <span className="length">{video.length}</span>

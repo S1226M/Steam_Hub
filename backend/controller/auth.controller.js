@@ -148,12 +148,13 @@ export const getProfile = async (req, res) => {
 // Update user profile
 export const updateProfile = async (req, res) => {
     try {
-        const { fullname, username, email } = req.body;
+        const { fullname, username, email, profileimage } = req.body;
         const updateData = {};
 
         if (fullname) updateData.fullname = fullname;
         if (username) updateData.username = username;
         if (email) updateData.email = email;
+        if (profileimage) updateData.profileimage = profileimage;
 
         // Check if username or email already exists (excluding current user)
         if (username || email) {

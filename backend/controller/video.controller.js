@@ -8,12 +8,17 @@ export const uploadVideo = async (req, res) => {
   try {
     console.log("📤 Upload request received:", {
       hasFile: !!req.file,
+      hasFiles: !!req.files,
       hasUser: !!req.user,
       body: req.body
     });
 
-    if (!req.file) {
-      console.log("❌ No file uploaded");
+    // Handle both single file and multiple files upload
+    const videoFile = req.file || (req.files && req.files.video ? req.files.video[0] : null);
+    const thumbnailFile = req.files && req.files.thumbnail ? req.files.thumbnail[0] : null;
+
+    if (!videoFile) {
+      console.log("❌ No video file uploaded");
       return res.status(400).json({ error: "No video uploaded" });
     }
     
@@ -22,8 +27,8 @@ export const uploadVideo = async (req, res) => {
       return res.status(401).json({ error: "Unauthorized. No user found." });
     }
 
-    const filePath = req.file.path;
-    console.log("📁 File path:", filePath);
+    const videoFilePath = videoFile.path;
+    console.log("📁 Video file path:", videoFilePath);
 
     console.log("☁️ Uploading to Cloudinary...");
     
@@ -33,15 +38,15 @@ export const uploadVideo = async (req, res) => {
       
       // Create a mock video entry for testing
       const video = await Video.create({
-        title: req.body.title || req.file.originalname,
+        title: req.body.title || videoFile.originalname,
         description: req.body.description || "",
-        videoUrl: `file://${filePath}`, // Local file path for testing
-        thumbnail: `file://${filePath}.jpg`,
+        videoUrl: `file://${videoFilePath}`, // Local file path for testing
+        thumbnail: thumbnailFile ? `file://${thumbnailFile.path}` : `file://${videoFilePath}.jpg`,
         duration: 0,
         public_id: `mock_${Date.now()}`,
         category: req.body.category || "General",
         owner: req.user._id,
-        isPublic: req.body.isPublic !== "false",
+        isPublic: req.body.isPrivate !== "true", // Convert isPrivate to isPublic
         isPremium: req.body.isPremium === "true",
       });
 
@@ -54,31 +59,59 @@ export const uploadVideo = async (req, res) => {
       return;
     }
 
-    const result = await cloudinary.uploader.upload(filePath, {
+    // Upload video to Cloudinary
+    const videoResult = await cloudinary.uploader.upload(videoFilePath, {
       resource_type: "video",
       folder: "videos",
     });
-    console.log("✅ Cloudinary upload successful:", result.public_id);
+    console.log("✅ Video upload to Cloudinary successful:", videoResult.public_id);
 
-    // Cleanup temp file
+    // Handle thumbnail upload (static images only)
+    let thumbnailUrl = videoResult.secure_url + ".jpg"; // Default thumbnail
+    if (thumbnailFile) {
+      try {
+        const thumbnailResult = await cloudinary.uploader.upload(thumbnailFile.path, {
+          folder: "thumbnails",
+          transformation: [
+            { width: 320, height: 180, crop: "fill", quality: "auto" }
+          ]
+        });
+        thumbnailUrl = thumbnailResult.secure_url;
+        console.log("✅ Custom thumbnail upload successful:", thumbnailResult.public_id);
+        
+        // Cleanup thumbnail temp file
+        try {
+          fs.unlinkSync(thumbnailFile.path);
+          console.log("🗑️ Thumbnail temp file cleaned up");
+        } catch (cleanupError) {
+          console.log("⚠️ Failed to cleanup thumbnail temp file:", cleanupError.message);
+        }
+      } catch (thumbnailError) {
+        console.log("⚠️ Custom thumbnail upload failed:", thumbnailError.message);
+        // Use default thumbnail URL
+        thumbnailUrl = videoResult.secure_url + ".jpg";
+      }
+    }
+
+    // Cleanup video temp file
     try {
-      fs.unlinkSync(filePath);
-      console.log("🗑️ Temp file cleaned up");
+      fs.unlinkSync(videoFilePath);
+      console.log("🗑️ Video temp file cleaned up");
     } catch (cleanupError) {
-      console.log("⚠️ Failed to cleanup temp file:", cleanupError.message);
+      console.log("⚠️ Failed to cleanup video temp file:", cleanupError.message);
     }
 
     console.log("💾 Saving video to database...");
     const video = await Video.create({
-      title: req.body.title || result.original_filename,
+      title: req.body.title || videoResult.original_filename,
       description: req.body.description || "",
-      videoUrl: result.secure_url,
-      thumbnail: result.secure_url + ".jpg",
-      duration: result.duration,
-      public_id: result.public_id,
+      videoUrl: videoResult.secure_url,
+      thumbnail: thumbnailUrl,
+      duration: videoResult.duration,
+      public_id: videoResult.public_id,
       category: req.body.category || "General",
       owner: req.user._id,
-      isPublic: req.body.isPublic !== "false",
+      isPublic: req.body.isPrivate !== "true", // Convert isPrivate to isPublic
       isPremium: req.body.isPremium === "true",
     });
 

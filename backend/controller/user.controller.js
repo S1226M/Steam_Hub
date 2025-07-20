@@ -1,10 +1,6 @@
 import express from "express";
 import User from "../model/user.model.js";
 
-
-// const User = require('../model/user.model.js');
-// const User = require('../model/user.model.js');
-
 // Fetch all users (Admin)
 const getAllUsers = async (req, res) => {
     try {
@@ -14,7 +10,6 @@ const getAllUsers = async (req, res) => {
         res.status(500).json({ message: "Error fetching users", error: error.message });
     }
 };
-
 
 const getUserById = async (req, res) => {
     try {
@@ -28,7 +23,32 @@ const getUserById = async (req, res) => {
     }
 };
 
+// Get user statistics
+const getUserStats = async (req, res) => {
+    try {
+        const userId = req.user._id;
+        
+        // Get user's video count, likes, comments, etc.
+        const stats = {
+            totalVideos: 0,
+            totalLikes: 0,
+            totalComments: 0,
+            totalViews: 0,
+            subscribers: 0
+        };
+
+        // You can add more statistics here based on your models
+        res.status(200).json({ stats });
+    } catch (error) {
+        res.status(500).json({
+            message: 'Error fetching user stats',
+            error: error.message
+        });
+    }
+};
+
 export default {
     getAllUsers,
-    getUserById
+    getUserById,
+    getUserStats
 }

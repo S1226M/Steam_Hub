@@ -1,20 +1,25 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
+import { subscriptionAPI, videoAPI } from "../../utils/api";
 import VideoPlayer from "./VideoPlayer";
 import "./Subscriptions.css";
 
 const Subscriptions = () => {
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const [subscriptions, setSubscriptions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedVideo, setSelectedVideo] = useState(null);
 
-  // Mock subscriptions data
+  // Mock subscriptions data with realistic thumbnails
   const mockSubscriptions = [
     {
       id: 1,
       channelName: "TechReviews Pro",
-      channelAvatar: "https://picsum.photos/60/60?random=1",
+      channelAvatar:
+        "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=60&h=60&fit=crop&crop=face",
       subscribers: "2.1M",
       isSubscribed: true,
       videos: [
@@ -24,7 +29,8 @@ const Subscriptions = () => {
           views: "450K",
           date: "1 day ago",
           length: "15:30",
-          thumbnail: "https://picsum.photos/320/180?random=101",
+          thumbnail:
+            "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=320&h=180&fit=crop",
           videoUrl:
             "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4",
         },
@@ -34,7 +40,8 @@ const Subscriptions = () => {
           views: "320K",
           date: "3 days ago",
           length: "22:15",
-          thumbnail: "https://picsum.photos/320/180?random=102",
+          thumbnail:
+            "https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=320&h=180&fit=crop",
           videoUrl:
             "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_2mb.mp4",
         },
@@ -43,7 +50,8 @@ const Subscriptions = () => {
     {
       id: 2,
       channelName: "Chef's Kitchen",
-      channelAvatar: "https://picsum.photos/60/60?random=2",
+      channelAvatar:
+        "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=60&h=60&fit=crop&crop=face",
       subscribers: "890K",
       isSubscribed: true,
       videos: [
@@ -53,7 +61,8 @@ const Subscriptions = () => {
           views: "180K",
           date: "2 days ago",
           length: "18:45",
-          thumbnail: "https://picsum.photos/320/180?random=201",
+          thumbnail:
+            "https://images.unsplash.com/photo-1551183053-bf91a1d81141?w=320&h=180&fit=crop",
           videoUrl:
             "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4",
         },
@@ -62,7 +71,8 @@ const Subscriptions = () => {
     {
       id: 3,
       channelName: "GamingZone",
-      channelAvatar: "https://picsum.photos/60/60?random=3",
+      channelAvatar:
+        "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=60&h=60&fit=crop&crop=face",
       subscribers: "5.2M",
       isSubscribed: true,
       videos: [
@@ -72,7 +82,8 @@ const Subscriptions = () => {
           views: "1.2M",
           date: "5 hours ago",
           length: "25:12",
-          thumbnail: "https://picsum.photos/320/180?random=301",
+          thumbnail:
+            "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=320&h=180&fit=crop",
           videoUrl:
             "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_5mb.mp4",
         },
@@ -82,7 +93,8 @@ const Subscriptions = () => {
           views: "890K",
           date: "1 day ago",
           length: "32:45",
-          thumbnail: "https://picsum.photos/320/180?random=302",
+          thumbnail:
+            "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=320&h=180&fit=crop",
           videoUrl:
             "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_2mb.mp4",
         },
@@ -96,30 +108,97 @@ const Subscriptions = () => {
         setLoading(true);
         setError(null);
 
-        // Try to fetch from API first
-        const response = await axios.get(
-          "http://localhost:5000/api/subscriptions"
-        );
+        if (!user || !user._id) {
+          setError("Please login to view your subscriptions");
+          setLoading(false);
+          return;
+        }
 
-        if (response.data && response.data.length > 0) {
-          setSubscriptions(response.data);
+        // Fetch user's subscribed channels from API
+        const response = await subscriptionAPI.getUserSubscriptions(user._id);
+
+        if (response.success && response.data.subscribedChannels) {
+          // Transform the data to match our component structure
+          const transformedSubscriptions = response.data.subscribedChannels.map(
+            (channel) => ({
+              id: channel._id,
+              channelName: channel.fullname || channel.username,
+              channelAvatar:
+                channel.profileimage ||
+                "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=60&h=60&fit=crop&crop=face",
+              subscribers: "0", // This would need to be fetched separately
+              isSubscribed: true,
+              videos: [], // This would need to be fetched separately
+              channelData: channel, // Keep original data
+            })
+          );
+
+          setSubscriptions(transformedSubscriptions);
+
+          // Fetch videos for each subscribed channel
+          await fetchVideosForChannels(transformedSubscriptions);
         } else {
-          // Fallback to mock data
-          setSubscriptions(mockSubscriptions);
+          setSubscriptions([]);
         }
       } catch (err) {
         console.error("Subscriptions fetch failed:", err);
-        setSubscriptions(mockSubscriptions);
-        setError(
-          "Could not load subscriptions from server. Showing demo content."
-        );
+        setError("Could not load subscriptions from server. Please try again.");
+        setSubscriptions([]);
       } finally {
         setLoading(false);
       }
     };
 
     fetchSubscriptions();
-  }, []);
+  }, [user]);
+
+  // Function to fetch videos for subscribed channels
+  const fetchVideosForChannels = async (channels) => {
+    try {
+      const updatedChannels = await Promise.all(
+        channels.map(async (channel) => {
+          try {
+            // Fetch videos for this channel
+            const videosResponse = await videoAPI.getAllVideos();
+            const channelVideos =
+              videosResponse.videos?.filter(
+                (video) => video.userId === channel.id
+              ) || [];
+
+            // Transform videos to match our structure
+            const transformedVideos = channelVideos
+              .slice(0, 5)
+              .map((video) => ({
+                id: video._id,
+                title: video.title,
+                views: video.views || "0",
+                date: new Date(video.createdAt).toLocaleDateString(),
+                length: video.duration || "10:00",
+                thumbnail:
+                  video.thumbnail ||
+                  "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=320&h=180&fit=crop",
+                videoUrl: video.videoUrl,
+              }));
+
+            return {
+              ...channel,
+              videos: transformedVideos,
+            };
+          } catch (err) {
+            console.error(
+              `Failed to fetch videos for channel ${channel.id}:`,
+              err
+            );
+            return channel;
+          }
+        })
+      );
+
+      setSubscriptions(updatedChannels);
+    } catch (err) {
+      console.error("Failed to fetch videos for channels:", err);
+    }
+  };
 
   const handleVideoClick = (video) => {
     setSelectedVideo(video);
@@ -129,20 +208,53 @@ const Subscriptions = () => {
     setSelectedVideo(null);
   };
 
-  const handleUnsubscribe = (channelId) => {
-    setSubscriptions((prev) =>
-      prev.map((sub) =>
-        sub.id === channelId ? { ...sub, isSubscribed: false } : sub
-      )
-    );
+  const handleUnsubscribe = async (channelId) => {
+    try {
+      if (!user || !user._id) {
+        setError("Please login to manage subscriptions");
+        return;
+      }
+
+      const response = await subscriptionAPI.unsubscribeFromChannel(
+        user._id,
+        channelId
+      );
+
+      if (response.success) {
+        // Remove the channel from subscriptions
+        setSubscriptions((prev) => prev.filter((sub) => sub.id !== channelId));
+      } else {
+        setError("Failed to unsubscribe from channel");
+      }
+    } catch (err) {
+      console.error("Unsubscribe failed:", err);
+      setError("Failed to unsubscribe from channel");
+    }
   };
 
-  const handleSubscribe = (channelId) => {
-    setSubscriptions((prev) =>
-      prev.map((sub) =>
-        sub.id === channelId ? { ...sub, isSubscribed: true } : sub
-      )
-    );
+  const handleSubscribe = async (channelId) => {
+    try {
+      if (!user || !user._id) {
+        setError("Please login to manage subscriptions");
+        return;
+      }
+
+      const response = await subscriptionAPI.subscribeToChannel(
+        user._id,
+        channelId
+      );
+
+      if (response.success) {
+        // Add the channel to subscriptions (you might need to fetch channel details)
+        // For now, we'll just show a success message
+        setError(null);
+      } else {
+        setError("Failed to subscribe to channel");
+      }
+    } catch (err) {
+      console.error("Subscribe failed:", err);
+      setError("Failed to subscribe to channel");
+    }
   };
 
   if (loading) {
@@ -212,7 +324,17 @@ const Subscriptions = () => {
           </svg>
           <h3>No subscriptions yet</h3>
           <p>Subscribe to channels to see their latest videos here</p>
-          <button className="explore-btn">Explore Channels</button>
+          <div className="subscription-actions">
+            <button className="explore-btn" onClick={() => navigate("/")}>
+              Explore Channels
+            </button>
+            <button
+              className="refresh-btn"
+              onClick={() => window.location.reload()}
+            >
+              Refresh Page
+            </button>
+          </div>
         </div>
       ) : (
         <div className="subscriptions-content">
@@ -225,7 +347,8 @@ const Subscriptions = () => {
                     alt={channel.channelName}
                     className="channel-avatar"
                     onError={(e) => {
-                      e.target.src = "https://picsum.photos/60/60?random=999";
+                      e.target.src =
+                        "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=60&h=60&fit=crop&crop=face";
                     }}
                   />
                   <div className="channel-details">
@@ -233,18 +356,22 @@ const Subscriptions = () => {
                     <p>{channel.subscribers} subscribers</p>
                   </div>
                 </div>
-                <button
-                  className={`subscribe-btn ${
-                    channel.isSubscribed ? "subscribed" : ""
-                  }`}
-                  onClick={() =>
-                    channel.isSubscribed
-                      ? handleUnsubscribe(channel.id)
-                      : handleSubscribe(channel.id)
-                  }
-                >
-                  {channel.isSubscribed ? "Subscribed" : "Subscribe"}
-                </button>
+                <div className="channel-actions">
+                  <button
+                    className="view-channel-btn"
+                    onClick={() => navigate(`/channel/${channel.id}`)}
+                  >
+                    View Channel
+                  </button>
+                  <button
+                    className={`subscribe-btn ${
+                      channel.isSubscribed ? "subscribed" : ""
+                    }`}
+                    onClick={() => handleUnsubscribe(channel.id)}
+                  >
+                    {channel.isSubscribed ? "Unsubscribe" : "Subscribe"}
+                  </button>
+                </div>
               </div>
 
               <div className="channel-videos">
@@ -267,8 +394,18 @@ const Subscriptions = () => {
                         alt={video.title}
                         loading="lazy"
                         onError={(e) => {
+                          // Use unique fallback based on video ID
+                          const fallbackThumbnails = [
+                            "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=320&h=180&fit=crop&crop=center",
+                            "https://images.unsplash.com/photo-1551183053-bf91a1d81141?w=320&h=180&fit=crop&crop=center",
+                            "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=320&h=180&fit=crop&crop=center",
+                            "https://images.unsplash.com/photo-1537953773345-d172ccf13cf1?w=320&h=180&fit=crop&crop=center",
+                            "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=320&h=180&fit=crop&crop=center",
+                          ];
                           e.target.src =
-                            "https://picsum.photos/320/180?random=999";
+                            fallbackThumbnails[
+                              video.id % fallbackThumbnails.length
+                            ];
                         }}
                       />
                       <span className="length">{video.length}</span>

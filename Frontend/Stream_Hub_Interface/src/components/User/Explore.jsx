@@ -10,7 +10,7 @@ const Explore = () => {
   const [selectedVideo, setSelectedVideo] = useState(null);
   const [filter, setFilter] = useState("trending");
 
-  // Mock trending videos data
+  // Mock trending videos data with realistic thumbnails
   const mockTrendingVideos = [
     {
       id: 1,
@@ -19,7 +19,8 @@ const Explore = () => {
       views: "15.2M",
       date: "2 hours ago",
       length: "8:45",
-      thumbnail: "https://picsum.photos/320/180?random=10",
+      thumbnail:
+        "https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=320&h=180&fit=crop",
       videoUrl:
         "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4",
       premium: false,
@@ -32,7 +33,8 @@ const Explore = () => {
       views: "8.7M",
       date: "5 hours ago",
       length: "12:30",
-      thumbnail: "https://picsum.photos/320/180?random=11",
+      thumbnail:
+        "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=320&h=180&fit=crop",
       videoUrl:
         "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_2mb.mp4",
       premium: true,
@@ -45,7 +47,8 @@ const Explore = () => {
       views: "22.1M",
       date: "1 day ago",
       length: "45:20",
-      thumbnail: "https://picsum.photos/320/180?random=12",
+      thumbnail:
+        "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=320&h=180&fit=crop",
       videoUrl:
         "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_5mb.mp4",
       premium: false,
@@ -58,7 +61,8 @@ const Explore = () => {
       views: "3.4M",
       date: "3 hours ago",
       length: "5:15",
-      thumbnail: "https://picsum.photos/320/180?random=13",
+      thumbnail:
+        "https://images.unsplash.com/photo-1551183053-bf91a1d81141?w=320&h=180&fit=crop",
       videoUrl:
         "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4",
       premium: false,
@@ -71,7 +75,8 @@ const Explore = () => {
       views: "6.8M",
       date: "6 hours ago",
       length: "10:30",
-      thumbnail: "https://picsum.photos/320/180?random=14",
+      thumbnail:
+        "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=320&h=180&fit=crop",
       videoUrl:
         "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_2mb.mp4",
       premium: false,
@@ -84,7 +89,8 @@ const Explore = () => {
       views: "4.2M",
       date: "1 day ago",
       length: "28:45",
-      thumbnail: "https://picsum.photos/320/180?random=15",
+      thumbnail:
+        "https://images.unsplash.com/photo-1537953773345-d172ccf13cf1?w=320&h=180&fit=crop",
       videoUrl:
         "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_5mb.mp4",
       premium: true,
@@ -266,7 +272,17 @@ const Explore = () => {
                     alt={vid.title}
                     loading="lazy"
                     onError={(e) => {
-                      e.target.src = "https://picsum.photos/320/180?random=999";
+                      // Use unique fallback based on video ID
+                      const fallbackThumbnails = [
+                        "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=320&h=180&fit=crop&crop=center",
+                        "https://images.unsplash.com/photo-1551183053-bf91a1d81141?w=320&h=180&fit=crop&crop=center",
+                        "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=320&h=180&fit=crop&crop=center",
+                        "https://images.unsplash.com/photo-1537953773345-d172ccf13cf1?w=320&h=180&fit=crop&crop=center",
+                        "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=320&h=180&fit=crop&crop=center",
+                        "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=320&h=180&fit=crop&crop=center",
+                      ];
+                      e.target.src =
+                        fallbackThumbnails[vid.id % fallbackThumbnails.length];
                     }}
                   />
                   {vid.trending && (

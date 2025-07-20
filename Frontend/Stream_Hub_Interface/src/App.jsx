@@ -12,6 +12,9 @@ import Explore from "./components/User/Explore";
 import Subscriptions from "./components/User/Subscriptions";
 import Library from "./components/User/Library";
 import VideoPlayer from "./components/User/VideoPlayer";
+import Settings from "./components/User/Settings";
+import UserProfile from "./components/User/UserProfile";
+import WebRTCLiveStream from "./components/User/WebRTCLiveStream";
 
 // Error Boundary Component
 class ErrorBoundary extends React.Component {
@@ -25,38 +28,40 @@ class ErrorBoundary extends React.Component {
   }
 
   componentDidCatch(error, errorInfo) {
-    console.error('Error caught by boundary:', error, errorInfo);
+    console.error("Error caught by boundary:", error, errorInfo);
   }
 
   render() {
     if (this.state.hasError) {
       return (
-        <div style={{
-          minHeight: '100vh',
-          background: 'linear-gradient(135deg, #ff5e62, #ff9966)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          color: 'white',
-          fontSize: '18px',
-          fontFamily: 'Arial, sans-serif',
-          padding: '20px',
-          textAlign: 'center'
-        }}>
+        <div
+          style={{
+            minHeight: "100vh",
+            background: "linear-gradient(135deg, #ff5e62, #ff9966)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: "white",
+            fontSize: "18px",
+            fontFamily: "Arial, sans-serif",
+            padding: "20px",
+            textAlign: "center",
+          }}
+        >
           <div>
             <h1>🚨 Error Detected</h1>
             <p>Component failed to render properly</p>
             <p>Error: {this.state.error?.message}</p>
-            <button 
+            <button
               onClick={() => window.location.reload()}
               style={{
-                background: 'rgba(255,255,255,0.2)',
-                border: '2px solid white',
-                color: 'white',
-                padding: '10px 20px',
-                borderRadius: '5px',
-                cursor: 'pointer',
-                marginTop: '20px'
+                background: "rgba(255,255,255,0.2)",
+                border: "2px solid white",
+                color: "white",
+                padding: "10px 20px",
+                borderRadius: "5px",
+                cursor: "pointer",
+                marginTop: "20px",
               }}
             >
               Reload Page
@@ -71,8 +76,8 @@ class ErrorBoundary extends React.Component {
 }
 
 function App() {
-  console.log('App component rendering...');
-  
+  console.log("App component rendering...");
+
   return (
     <ErrorBoundary>
       <AuthProvider>
@@ -80,58 +85,93 @@ function App() {
           <Routes>
             {/* Public routes */}
             <Route path="/" element={<Navigate to="/login" replace />} />
-            <Route path="/login" element={
-              <ErrorBoundary>
-                <Login />
-              </ErrorBoundary>
-            } />
-            <Route path="/signup" element={
-              <ErrorBoundary>
-                <Signup />
-              </ErrorBoundary>
-            } />
-            <Route path="/video/:videoId" element={
-              <ErrorBoundary>
-                <AuthProvider>
-                  <VideoPlayer />
-                </AuthProvider>
-              </ErrorBoundary>
-            } />
+            <Route
+              path="/login"
+              element={
+                <ErrorBoundary>
+                  <Login />
+                </ErrorBoundary>
+              }
+            />
+            <Route
+              path="/signup"
+              element={
+                <ErrorBoundary>
+                  <Signup />
+                </ErrorBoundary>
+              }
+            />
+            <Route
+              path="/video/:videoId"
+              element={
+                <ErrorBoundary>
+                  <AuthProvider>
+                    <VideoPlayer />
+                  </AuthProvider>
+                </ErrorBoundary>
+              }
+            />
 
             {/* Protected user routes */}
-            <Route path="/user/*" element={
-              <ErrorBoundary>
-                <ProtectedRoute>
-                  <UserLayout />
-                </ProtectedRoute>
-              </ErrorBoundary>
-            }>
+            <Route
+              path="/user/*"
+              element={
+                <ErrorBoundary>
+                  <ProtectedRoute>
+                    <UserLayout />
+                  </ProtectedRoute>
+                </ErrorBoundary>
+              }
+            >
               <Route index element={<Navigate to="home" replace />} />
-              <Route path="home" element={
-                <ErrorBoundary>
-                  <Home />
-                </ErrorBoundary>
-              } />
-              <Route path="explore" element={
-                <ErrorBoundary>
-                  <Explore />
-                </ErrorBoundary>
-              } />
-              <Route path="subscriptions" element={
-                <ErrorBoundary>
-                  <Subscriptions />
-                </ErrorBoundary>
-              } />
-              <Route path="library" element={
-                <ErrorBoundary>
-                  <Library />
-                </ErrorBoundary>
-              } />
-              <Route path="video/:videoId" element={
-                <ErrorBoundary>
-                  <VideoPlayer />
-                </ErrorBoundary>
-              } />
+              <Route
+                path="home"
+                element={
+                  <ErrorBoundary>
+                    <Home />
+                  </ErrorBoundary>
+                }
+              />
+              <Route
+                path="explore"
+                element={
+                  <ErrorBoundary>
+                    <Explore />
+                  </ErrorBoundary>
+                }
+              />
+              <Route
+                path="subscriptions"
+                element={
+                  <ErrorBoundary>
+                    <Subscriptions />
+                  </ErrorBoundary>
+                }
+              />
+              <Route
+                path="library"
+                element={
+                  <ErrorBoundary>
+                    <Library />
+                  </ErrorBoundary>
+                }
+              />
+              <Route
+                path="video/:videoId"
+                element={
+                  <ErrorBoundary>
+                    <VideoPlayer />
+                  </ErrorBoundary>
+                }
+              />
+              <Route
+                path="profile"
+                element={
+                  <ErrorBoundary>
+                    <UserProfile />
+                  </ErrorBoundary>
+                }
+              />
               <Route
                 path="history"
                 element={
@@ -141,7 +181,9 @@ function App() {
               <Route
                 path="liked"
                 element={
-                  <div className="coming-soon">Liked videos page coming soon!</div>
+                  <div className="coming-soon">
+                    Liked videos page coming soon!
+                  </div>
                 }
               />
               <Route
@@ -153,17 +195,29 @@ function App() {
               <Route
                 path="settings"
                 element={
-                  <div className="coming-soon">Settings page coming soon!</div>
+                  <ErrorBoundary>
+                    <Settings />
+                  </ErrorBoundary>
                 }
               />
               <Route
                 path="help"
-                element={<div className="coming-soon">Help page coming soon!</div>}
+                element={
+                  <div className="coming-soon">Help page coming soon!</div>
+                }
               />
               <Route
                 path="feedback"
                 element={
                   <div className="coming-soon">Feedback page coming soon!</div>
+                }
+              />
+              <Route
+                path="webrtc"
+                element={
+                  <ErrorBoundary>
+                    <WebRTCLiveStream />
+                  </ErrorBoundary>
                 }
               />
             </Route>

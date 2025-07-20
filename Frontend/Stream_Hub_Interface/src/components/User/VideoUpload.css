@@ -3,6 +3,13 @@
   position: relative;
 }
 
+/* Upload Buttons Container */
+.upload-buttons {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
 /* Upload Button */
 .upload-btn {
   display: flex;
@@ -20,12 +27,40 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
+/* Start Streaming Button */
+.stream-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
 .upload-btn:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .upload-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.stream-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.stream-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
   transform: none;
@@ -333,6 +368,17 @@
 
 /* Responsive Design */
 @media (max-width: 768px) {
+  .upload-buttons {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .upload-btn,
+  .stream-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
   .upload-modal {
     margin: 20px;
     max-height: calc(100vh - 40px);
