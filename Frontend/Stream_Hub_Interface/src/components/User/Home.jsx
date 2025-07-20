@@ -146,7 +146,7 @@ export default function Home() {
   };
 
   const handleVideoClick = (video) => {
-    navigate(`/user/video/${video._id || video.id}`);
+    navigate(`/video/${video._id || video.id}`);
   };
 
   const formatNumber = (num) => {

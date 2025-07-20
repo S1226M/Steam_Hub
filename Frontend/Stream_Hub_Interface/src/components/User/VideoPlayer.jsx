@@ -1,13 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { videoAPI, likeAPI, commentAPI } from '../../utils/api';
+import { videoAPI, likeAPI, commentAPI, subscriptionAPI } from '../../utils/api';
 import './VideoPlayer.css';
 
 export default function VideoPlayer() {
   const { videoId } = useParams();
   const navigate = useNavigate();
   const { user, getAuthHeaders } = useAuth();
+  
+  console.log('VideoPlayer Debug:', {
+    videoId,
+    user: !!user,
+    userData: user
+  });
   
   const [video, setVideo] = useState(null);
   const [comments, setComments] = useState([]);
@@ -62,6 +68,19 @@ export default function VideoPlayer() {
           } catch (error) {
             console.log('Like API not available');
           }
+
+          // Check if user is subscribed to the channel
+          try {
+            const channelId = videoData.owner?._id;
+            if (channelId) {
+              const subscriptionResponse = await subscriptionAPI.checkChannelSubscription(user._id, channelId);
+              if (subscriptionResponse.success) {
+                setIsSubscribed(subscriptionResponse.data.subscribed);
+              }
+            }
+          } catch (error) {
+            console.log('Subscription check API not available');
+          }
         }
       
     } catch (error) {
@@ -104,8 +123,17 @@ export default function VideoPlayer() {
 
     if (!commentText.trim()) return;
 
+    console.log('Adding comment:', {
+      videoId,
+      userId: user._id,
+      content: commentText,
+      user: user
+    });
+
     try {
       const response = await commentAPI.addComment(videoId, user._id, commentText);
+      
+      console.log('Comment response:', response);
       
       if (response.success) {
         // Add the new comment to the list
@@ -124,10 +152,13 @@ export default function VideoPlayer() {
         // Show success message
         setMessage({ type: 'success', text: 'Comment added successfully!' });
         setTimeout(() => setMessage(null), 2000);
+      } else {
+        setMessage({ type: 'error', text: response.message || 'Failed to add comment' });
+        setTimeout(() => setMessage(null), 3000);
       }
     } catch (error) {
       console.error('Error adding comment:', error);
-      setMessage({ type: 'error', text: 'Failed to add comment' });
+      setMessage({ type: 'error', text: error.message || 'Failed to add comment' });
       setTimeout(() => setMessage(null), 3000);
     }
   };
@@ -146,13 +177,53 @@ export default function VideoPlayer() {
     }
   };
 
-  const handleSubscribe = () => {
+  const handleSubscribe = async () => {
     if (!user) {
       navigate('/login');
       return;
     }
-    setIsSubscribed(!isSubscribed);
-    // TODO: Implement subscription API
+
+    try {
+      const channelId = video.owner?._id;
+      if (!channelId) {
+        setMessage({ type: 'error', text: 'Channel information not available' });
+        setTimeout(() => setMessage(null), 3000);
+        return;
+      }
+
+      console.log('Subscription action:', {
+        userId: user._id,
+        channelId,
+        isSubscribed
+      });
+
+      let response;
+      if (isSubscribed) {
+        // Unsubscribe
+        response = await subscriptionAPI.unsubscribeFromChannel(user._id, channelId);
+      } else {
+        // Subscribe
+        response = await subscriptionAPI.subscribeToChannel(user._id, channelId);
+      }
+
+      console.log('Subscription response:', response);
+
+      if (response.success) {
+        setIsSubscribed(!isSubscribed);
+        setMessage({ 
+          type: 'success', 
+          text: isSubscribed ? 'Unsubscribed from channel' : 'Subscribed to channel!' 
+        });
+        setTimeout(() => setMessage(null), 2000);
+      } else {
+        setMessage({ type: 'error', text: response.message || 'Subscription action failed' });
+        setTimeout(() => setMessage(null), 3000);
+      }
+    } catch (error) {
+      console.error('Subscription error:', error);
+      setMessage({ type: 'error', text: error.message || 'Subscription action failed' });
+      setTimeout(() => setMessage(null), 3000);
+    }
   };
 
   const handleCommentLike = async (commentId) => {
@@ -233,8 +304,8 @@ export default function VideoPlayer() {
       <div className="video-player-error">
         <h2>Video not found</h2>
         <p>{error || 'This video may have been removed or is private.'}</p>
-        <button onClick={() => navigate('/user/home')} className="back-btn">
-          Go Home
+        <button onClick={() => navigate('/login')} className="back-btn">
+          Go to Login
         </button>
       </div>
     );

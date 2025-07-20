@@ -90,6 +90,14 @@ function App() {
                 <Signup />
               </ErrorBoundary>
             } />
+            <Route path="/video/:videoId" element={
+              <ErrorBoundary>
+                <AuthProvider>
+                  <VideoPlayer />
+                </AuthProvider>
+              </ErrorBoundary>
+            } />
+
             {/* Protected user routes */}
             <Route path="/user/*" element={
               <ErrorBoundary>
