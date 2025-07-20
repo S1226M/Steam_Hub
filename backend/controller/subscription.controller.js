@@ -1,6 +1,8 @@
 import Subscription from "../model/subscription.model.js";
 import User from "../model/user.model.js";
 
+// Channel Subscription Functions (using User model's followers/following)
+
 // ✅ CREATE SUBSCRIPTION
 export const createSubscription = async (req, res) => {
   try {
@@ -780,6 +782,229 @@ async function applyDiscount(code, originalPrice) {
   return null;
 }
 
+// ✅ CHANNEL SUBSCRIPTION FUNCTIONS (YouTube-like)
+
+// Subscribe to a channel
+export const subscribeToChannel = async (req, res) => {
+  try {
+    const { userId, channelId } = req.body;
+
+    // Validation
+    if (!userId || !channelId) {
+      return res.status(400).json({
+        success: false,
+        message: "userId and channelId are required"
+      });
+    }
+
+    // Check if user exists
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found"
+      });
+    }
+
+    // Check if channel exists
+    const channel = await User.findById(channelId);
+    if (!channel) {
+      return res.status(404).json({
+        success: false,
+        message: "Channel not found"
+      });
+    }
+
+    // Check if already subscribed
+    if (user.following.includes(channelId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Already subscribed to this channel"
+      });
+    }
+
+    // Add to following (user subscribes to channel)
+    user.following.push(channelId);
+    await user.save();
+
+    // Add to followers (channel gains subscriber)
+    channel.followers.push(userId);
+    await channel.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Successfully subscribed to channel",
+      data: {
+        subscribed: true,
+        subscriberCount: channel.followers.length
+      }
+    });
+
+  } catch (error) {
+    console.error("Subscribe to Channel Error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error"
+    });
+  }
+};
+
+// Unsubscribe from a channel
+export const unsubscribeFromChannel = async (req, res) => {
+  try {
+    const { userId, channelId } = req.body;
+
+    // Validation
+    if (!userId || !channelId) {
+      return res.status(400).json({
+        success: false,
+        message: "userId and channelId are required"
+      });
+    }
+
+    // Check if user exists
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found"
+      });
+    }
+
+    // Check if channel exists
+    const channel = await User.findById(channelId);
+    if (!channel) {
+      return res.status(404).json({
+        success: false,
+        message: "Channel not found"
+      });
+    }
+
+    // Check if subscribed
+    if (!user.following.includes(channelId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Not subscribed to this channel"
+      });
+    }
+
+    // Remove from following
+    user.following = user.following.filter(id => id.toString() !== channelId);
+    await user.save();
+
+    // Remove from followers
+    channel.followers = channel.followers.filter(id => id.toString() !== userId);
+    await channel.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Successfully unsubscribed from channel",
+      data: {
+        subscribed: false,
+        subscriberCount: channel.followers.length
+      }
+    });
+
+  } catch (error) {
+    console.error("Unsubscribe from Channel Error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error"
+    });
+  }
+};
+
+// Get channel subscribers count
+export const getChannelSubscribers = async (req, res) => {
+  try {
+    const { channelId } = req.params;
+
+    const channel = await User.findById(channelId);
+    if (!channel) {
+      return res.status(404).json({
+        success: false,
+        message: "Channel not found"
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: {
+        subscriberCount: channel.followers.length,
+        subscribers: channel.followers
+      }
+    });
+
+  } catch (error) {
+    console.error("Get Channel Subscribers Error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error"
+    });
+  }
+};
+
+// Get user's subscribed channels
+export const getUserSubscriptions = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    const user = await User.findById(userId).populate('following', 'username fullname profileimage');
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found"
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: {
+        subscribedChannels: user.following,
+        subscriptionCount: user.following.length
+      }
+    });
+
+  } catch (error) {
+    console.error("Get User Subscriptions Error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error"
+    });
+  }
+};
+
+// Check if user is subscribed to a channel
+export const checkChannelSubscription = async (req, res) => {
+  try {
+    const { userId, channelId } = req.params;
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found"
+      });
+    }
+
+    const isSubscribed = user.following.includes(channelId);
+
+    res.status(200).json({
+      success: true,
+      data: {
+        subscribed: isSubscribed
+      }
+    });
+
+  } catch (error) {
+    console.error("Check Channel Subscription Error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error"
+    });
+  }
+};
+
 export default {
   createSubscription,
   getUserSubscription,
@@ -794,5 +1019,10 @@ export default {
   addPaymentRecord,
   getExpiringSubscriptions,
   getSubscriptionStats,
-  validateSubscriptionAccess
+  validateSubscriptionAccess,
+  subscribeToChannel,
+  unsubscribeFromChannel,
+  getChannelSubscribers,
+  getUserSubscriptions,
+  checkChannelSubscription
 };

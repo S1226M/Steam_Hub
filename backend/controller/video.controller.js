@@ -1,23 +1,74 @@
 import fs from "fs";
-import { v2 as cloudinary } from "cloudinary";
+import cloudinary from "../config/cloudnary.js";
 import Video from "../model/video.model.js";
 import mongoose from "mongoose";
 
 // Upload Video (requires authenticated user in req.user)
 export const uploadVideo = async (req, res) => {
   try {
-    if (!req.file) return res.status(400).json({ error: "No video uploaded" });
-    if (!req.user || !req.user._id) return res.status(401).json({ error: "Unauthorized. No user found." });
+    console.log("📤 Upload request received:", {
+      hasFile: !!req.file,
+      hasUser: !!req.user,
+      body: req.body
+    });
+
+    if (!req.file) {
+      console.log("❌ No file uploaded");
+      return res.status(400).json({ error: "No video uploaded" });
+    }
+    
+    if (!req.user || !req.user._id) {
+      console.log("❌ No authenticated user");
+      return res.status(401).json({ error: "Unauthorized. No user found." });
+    }
 
     const filePath = req.file.path;
+    console.log("📁 File path:", filePath);
+
+    console.log("☁️ Uploading to Cloudinary...");
+    
+    // Check if Cloudinary is properly configured
+    if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
+      console.log("⚠️ Cloudinary not configured, creating mock video entry");
+      
+      // Create a mock video entry for testing
+      const video = await Video.create({
+        title: req.body.title || req.file.originalname,
+        description: req.body.description || "",
+        videoUrl: `file://${filePath}`, // Local file path for testing
+        thumbnail: `file://${filePath}.jpg`,
+        duration: 0,
+        public_id: `mock_${Date.now()}`,
+        category: req.body.category || "General",
+        owner: req.user._id,
+        isPublic: req.body.isPublic !== "false",
+        isPremium: req.body.isPremium === "true",
+      });
+
+      console.log("✅ Mock video saved to database:", video._id);
+      res.status(201).json({ 
+        success: true,
+        message: "🎥 Video uploaded successfully (mock mode)", 
+        video 
+      });
+      return;
+    }
 
     const result = await cloudinary.uploader.upload(filePath, {
       resource_type: "video",
       folder: "videos",
     });
+    console.log("✅ Cloudinary upload successful:", result.public_id);
 
-    fs.unlinkSync(filePath); // Cleanup temp file
+    // Cleanup temp file
+    try {
+      fs.unlinkSync(filePath);
+      console.log("🗑️ Temp file cleaned up");
+    } catch (cleanupError) {
+      console.log("⚠️ Failed to cleanup temp file:", cleanupError.message);
+    }
 
+    console.log("💾 Saving video to database...");
     const video = await Video.create({
       title: req.body.title || result.original_filename,
       description: req.body.description || "",
@@ -26,15 +77,24 @@ export const uploadVideo = async (req, res) => {
       duration: result.duration,
       public_id: result.public_id,
       category: req.body.category || "General",
-      owner: req.user._id, // ✅ set authenticated user as owner
+      owner: req.user._id,
       isPublic: req.body.isPublic !== "false",
       isPremium: req.body.isPremium === "true",
     });
 
-    res.status(201).json({ message: "🎥 Video uploaded", video });
+    console.log("✅ Video saved to database:", video._id);
+    res.status(201).json({ 
+      success: true,
+      message: "🎥 Video uploaded successfully", 
+      video 
+    });
   } catch (err) {
     console.error("❌ Upload error:", err.message);
-    res.status(500).json({ error: err.message });
+    console.error("❌ Error stack:", err.stack);
+    res.status(500).json({ 
+      success: false,
+      error: err.message 
+    });
   }
 };
 

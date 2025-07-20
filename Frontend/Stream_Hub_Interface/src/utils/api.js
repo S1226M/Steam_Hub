@@ -41,6 +41,18 @@ export const videoAPI = {
         'Authorization': `Bearer ${token}`,
       },
       body: formData,
+    })
+    .then(response => {
+      if (!response.ok) {
+        return response.json().then(errorData => {
+          throw new Error(errorData.error || errorData.message || `HTTP error! status: ${response.status}`);
+        });
+      }
+      return response.json();
+    })
+    .catch(error => {
+      console.error('Upload error:', error);
+      throw error;
     });
   },
 };
@@ -126,6 +138,35 @@ export const userAPI = {
   }),
 };
 
+// Channel Subscription API (YouTube-like)
+export const subscriptionAPI = {
+  // Subscribe to a channel
+  subscribeToChannel: (userId, channelId) => 
+    makeRequest('/subscriptions/channel/subscribe', {
+      method: 'POST',
+      body: JSON.stringify({ userId, channelId }),
+    }),
+  
+  // Unsubscribe from a channel
+  unsubscribeFromChannel: (userId, channelId) => 
+    makeRequest('/subscriptions/channel/unsubscribe', {
+      method: 'POST',
+      body: JSON.stringify({ userId, channelId }),
+    }),
+  
+  // Get channel subscribers count
+  getChannelSubscribers: (channelId) => 
+    makeRequest(`/subscriptions/channel/${channelId}/subscribers`),
+  
+  // Get user's subscribed channels
+  getUserSubscriptions: (userId) => 
+    makeRequest(`/subscriptions/user/${userId}/channels`),
+  
+  // Check if user is subscribed to a channel
+  checkChannelSubscription: (userId, channelId) => 
+    makeRequest(`/subscriptions/channel/${channelId}/check/${userId}`),
+};
+
 // Auth API
 export const authAPI = {
   login: (credentials) => makeRequest('/auth/login', {
@@ -149,4 +190,5 @@ export default {
   commentAPI,
   userAPI,
   authAPI,
+  subscriptionAPI,
 }; 

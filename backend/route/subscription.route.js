@@ -13,12 +13,34 @@ import {
   addPaymentRecord,
   getExpiringSubscriptions,
   getSubscriptionStats,
-  validateSubscriptionAccess
+  validateSubscriptionAccess,
+  // Channel subscription functions
+  subscribeToChannel,
+  unsubscribeFromChannel,
+  getChannelSubscribers,
+  getUserSubscriptions,
+  checkChannelSubscription
 } from "../controller/subscription.controller.js";
 
 const router = express.Router();
 
-// ✅ CREATE SUBSCRIPTION
+// ✅ CHANNEL SUBSCRIPTIONS (YouTube-like)
+// POST /api/subscriptions/channel/subscribe
+router.post("/channel/subscribe", subscribeToChannel);
+
+// POST /api/subscriptions/channel/unsubscribe
+router.post("/channel/unsubscribe", unsubscribeFromChannel);
+
+// GET /api/subscriptions/channel/:channelId/subscribers
+router.get("/channel/:channelId/subscribers", getChannelSubscribers);
+
+// GET /api/subscriptions/user/:userId/channels
+router.get("/user/:userId/channels", getUserSubscriptions);
+
+// GET /api/subscriptions/channel/:channelId/check/:userId
+router.get("/channel/:channelId/check/:userId", checkChannelSubscription);
+
+// ✅ PREMIUM SUBSCRIPTIONS (Netflix-like)
 // POST /api/subscriptions
 router.post("/", createSubscription);
 

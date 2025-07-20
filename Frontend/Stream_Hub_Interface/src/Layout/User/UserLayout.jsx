@@ -3,6 +3,7 @@ import React, { useState, useRef } from "react";
 import { Outlet, NavLink } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import UserProfileDropdown from "../../components/User/UserProfileDropdown";
+import VideoUpload from "../../components/User/VideoUpload";
 import "./UserLayout.css";
 
 export default function UserLayout() {
@@ -87,6 +88,7 @@ export default function UserLayout() {
         </div>
 
         <div className="user-profile">
+          <VideoUpload />
           <button
             ref={profileButtonRef}
             className="profile-circle"

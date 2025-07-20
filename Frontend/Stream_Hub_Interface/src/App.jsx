@@ -90,7 +90,17 @@ function App() {
                 <Signup />
               </ErrorBoundary>
             } />
+<<<<<<< Updated upstream
 
+=======
+            <Route path="/video/:videoId" element={
+              <ErrorBoundary>
+                <AuthProvider>
+                  <VideoPlayer />
+                </AuthProvider>
+              </ErrorBoundary>
+            } />
+>>>>>>> Stashed changes
             {/* Protected user routes */}
             <Route path="/user/*" element={
               <ErrorBoundary>
