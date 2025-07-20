@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import "./Search.css";
 
 const Search = () => {
   const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState(searchParams.get("q") || "");
   const [searchResults, setSearchResults] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -168,7 +169,7 @@ const Search = () => {
 
   const handleVideoClick = (videoId) => {
     console.log("Playing video:", videoId);
-    // Navigate to video player or open video
+    navigate(`/user/video/${videoId}`);
   };
 
   const formatDuration = (duration) => {

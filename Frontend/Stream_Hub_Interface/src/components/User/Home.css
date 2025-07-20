@@ -5,28 +5,33 @@
   min-height: 100vh;
 }
 
-/* Loading state */
-.loading-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 400px;
-  gap: var(--spacing-lg);
+/* Skeleton Loading */
+.skeleton {
+  pointer-events: none;
 }
 
-.loading-spinner {
-  width: 40px;
-  height: 40px;
-  border: 3px solid var(--bg-tertiary);
-  border-top: 3px solid var(--primary-color);
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
+.skeleton-thumb {
+  background: linear-gradient(90deg, var(--bg-tertiary) 25%, var(--bg-secondary) 50%, var(--bg-tertiary) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
 }
 
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+.skeleton-text {
+  height: 16px;
+  background: linear-gradient(90deg, var(--bg-tertiary) 25%, var(--bg-secondary) 50%, var(--bg-tertiary) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 4px;
+  margin-bottom: 8px;
+}
+
+.skeleton-text:last-child {
+  width: 60%;
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
 }
 
 /* Error banner */
@@ -186,6 +191,52 @@
   object-fit: cover;
   display: block;
   transition: transform var(--transition-slow);
+  animation: none !important;
+}
+
+/* Prevent any blinking effects on video thumbnails */
+.thumb-wrap,
+.thumb-wrap *,
+.video-card .thumb-wrap,
+.video-card .thumb-wrap * {
+  animation: none !important;
+}
+
+/* Only allow skeleton animations on actual skeleton elements */
+.skeleton .skeleton-thumb {
+  animation: shimmer 1.5s infinite;
+}
+
+/* Prevent shimmer animation on non-skeleton elements */
+.thumb-wrap:not(.skeleton-thumb) {
+  animation: none !important;
+}
+
+/* Comprehensive anti-blink rules for video thumbnails */
+.video-card .thumb-wrap,
+.video-card .thumb-wrap img,
+.video-card .thumb-wrap span,
+.video-card .thumb-wrap div,
+.video-card .premium-badge,
+.video-card .length,
+.video-card .play-overlay {
+  animation: none !important;
+  -webkit-animation: none !important;
+  -moz-animation: none !important;
+  -o-animation: none !important;
+}
+
+/* Prevent any text overlays on thumbnails from blinking */
+.thumb-wrap::before,
+.thumb-wrap::after {
+  animation: none !important;
+  -webkit-animation: none !important;
+}
+
+/* Ensure smooth transitions only */
+.video-card .thumb-wrap img {
+  transition: transform var(--transition-slow);
+  animation: none !important;
 }
 
 .video-card:hover .thumb-wrap img {
@@ -278,6 +329,22 @@
   font-size: var(--font-size-sm);
   color: var(--text-secondary);
   font-weight: 500;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.channel:hover {
+  color: var(--primary-color);
+}
+
+/* Prevent blinking effects on usernames */
+.channel {
+  animation: none !important;
+  transition: color 0.2s ease;
+}
+
+.channel:hover {
+  animation: none !important;
 }
 
 .meta {

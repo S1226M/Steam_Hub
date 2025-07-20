@@ -1,6 +1,9 @@
 import fs from "fs";
 import cloudinary from "../config/cloudnary.js";
 import Video from "../model/video.model.js";
+import Like from "../model/like.model.js";
+import WatchVideoLog from "../model/watchvideolog.model.js";
+import Download from "../model/download.model.js";
 import mongoose from "mongoose";
 
 // Upload Video (requires authenticated user in req.user)
@@ -140,7 +143,7 @@ export const getAllVideos = async (req, res) => {
     const filter = all === 'true' ? {} : { isPublic: true };
     
     const videos = await Video.find(filter)
-      .populate('owner', 'fullname username profileimage subscribers')
+      .populate('owner', 'fullname username profileimage followers')
       .sort({ createdAt: -1 });
     
     // Add default owner info for videos without owner
@@ -153,7 +156,7 @@ export const getAllVideos = async (req, res) => {
             fullname: 'Unknown Creator',
             username: 'unknown',
             profileimage: null,
-            subscribers: 0
+            followers: []
           }
         };
       }
@@ -178,7 +181,7 @@ export const getVideoById = async (req, res) => {
     }
 
     const video = await Video.findById(id)
-      .populate('owner', 'fullname username profileimage subscribers')
+      .populate('owner', 'fullname username profileimage followers')
       .lean();
 
     if (!video) {
@@ -199,6 +202,61 @@ export const getVideoById = async (req, res) => {
   }
 };
 
+// Decrease view count
+export const decreaseViewCount = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid video ID" });
+    }
+
+    const video = await Video.findById(id);
+    if (!video) {
+      return res.status(404).json({ message: "Video not found" });
+    }
+
+    // Decrease view count (minimum 0)
+    const newViewCount = Math.max(0, (video.views || 0) - 1);
+    await Video.findByIdAndUpdate(id, { views: newViewCount });
+
+    console.log(`📉 Decreased view count for video ${id}: ${video.views} → ${newViewCount}`);
+    res.json({ 
+      success: true, 
+      message: "View count decreased",
+      newViewCount 
+    });
+  } catch (err) {
+    console.error("❌ Decrease view count error:", err.message);
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// Fetch videos by user
+export const getVideosByUser = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ message: "Invalid user ID" });
+    }
+
+    const videos = await Video.find({ 
+      owner: userId,
+      isPublic: true 
+    })
+      .populate('owner', 'fullname username profileimage followers')
+      .sort({ createdAt: -1 })
+      .lean();
+
+    console.log(`📊 Found ${videos.length} videos for user ${userId}`);
+    res.json({ data: videos });
+  } catch (err) {
+    console.error("❌ Fetch videos by user error:", err.message);
+    res.status(500).json({ error: err.message });
+  }
+};
+
 // Delete
 export const deleteVideo = async (req, res) => {
   try {
@@ -211,5 +269,131 @@ export const deleteVideo = async (req, res) => {
   } catch (err) {
     console.error("❌ Delete error:", err.message);
     res.status(500).json({ error: err.message });
+  }
+};
+
+// Get user's liked videos
+export const getLikedVideos = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { page = 1, limit = 20 } = req.query;
+
+    const skip = (page - 1) * limit;
+
+    const likes = await Like.find({ likeBy: userId })
+      .populate({
+        path: 'video',
+        populate: {
+          path: 'owner',
+          select: 'fullname username profileimage'
+        }
+      })
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(parseInt(limit))
+      .lean();
+
+    const total = await Like.countDocuments({ likeBy: userId });
+
+    res.json({
+      success: true,
+      data: likes,
+      pagination: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        total,
+        pages: Math.ceil(total / limit)
+      }
+    });
+  } catch (error) {
+    console.error("Error fetching liked videos:", error);
+    res.status(500).json({
+      success: false,
+      error: "Failed to fetch liked videos"
+    });
+  }
+};
+
+// Get user's watch history
+export const getWatchHistory = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { page = 1, limit = 20 } = req.query;
+
+    const skip = (page - 1) * limit;
+
+    const history = await WatchVideoLog.find({ user: userId })
+      .populate({
+        path: 'video',
+        populate: {
+          path: 'owner',
+          select: 'fullname username profileimage'
+        }
+      })
+      .sort({ watchedAt: -1 })
+      .skip(skip)
+      .limit(parseInt(limit))
+      .lean();
+
+    const total = await WatchVideoLog.countDocuments({ user: userId });
+
+    res.json({
+      success: true,
+      data: history,
+      pagination: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        total,
+        pages: Math.ceil(total / limit)
+      }
+    });
+  } catch (error) {
+    console.error("Error fetching watch history:", error);
+    res.status(500).json({
+      success: false,
+      error: "Failed to fetch watch history"
+    });
+  }
+};
+
+// Get user's downloads
+export const getDownloads = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { page = 1, limit = 20 } = req.query;
+
+    const skip = (page - 1) * limit;
+
+    const downloads = await Download.find({ user: userId })
+      .populate({
+        path: 'video',
+        populate: {
+          path: 'owner',
+          select: 'fullname username profileimage'
+        }
+      })
+      .sort({ downloadedAt: -1 })
+      .skip(skip)
+      .limit(parseInt(limit))
+      .lean();
+
+    const total = await Download.countDocuments({ user: userId });
+
+    res.json({
+      success: true,
+      data: downloads,
+      pagination: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        total,
+        pages: Math.ceil(total / limit)
+      }
+    });
+  } catch (error) {
+    console.error("Error fetching downloads:", error);
+    res.status(500).json({
+      success: false,
+      error: "Failed to fetch downloads"
+    });
   }
 };

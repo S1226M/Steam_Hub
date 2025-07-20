@@ -5,6 +5,11 @@ import {
   getAllVideos,
   getVideoById,
   deleteVideo,
+  getVideosByUser,
+  decreaseViewCount,
+  getLikedVideos,
+  getWatchHistory,
+  getDownloads,
 } from "../controller/video.controller.js";
 import { authenticateToken } from "../middleware/auth.middleware.js";
 
@@ -63,7 +68,14 @@ router.post("/upload-with-thumbnail", authenticateToken, upload.fields([
   { name: 'thumbnail', maxCount: 1 }
 ]), handleMulterError, uploadVideo);
 router.get("/", getAllVideos);
+router.get("/user/:userId", getVideosByUser);
 router.get("/:id", getVideoById);
+router.post("/:id/decrease-view", authenticateToken, decreaseViewCount);
 router.delete("/delete/:public_id", deleteVideo);
+
+// Library endpoints
+router.get("/liked/:userId", authenticateToken, getLikedVideos);
+router.get("/history/:userId", authenticateToken, getWatchHistory);
+router.get("/downloads/:userId", authenticateToken, getDownloads);
 
 export default router;

@@ -116,6 +116,8 @@ const Subscriptions = () => {
 
         // Fetch user's subscribed channels from API
         const response = await subscriptionAPI.getUserSubscriptions(user._id);
+        console.log("Subscriptions response:", response);
+        console.log("Subscribed channels:", response.data?.subscribedChannels);
 
         if (response.success && response.data.subscribedChannels) {
           // Transform the data to match our component structure
@@ -126,7 +128,9 @@ const Subscriptions = () => {
               channelAvatar:
                 channel.profileimage ||
                 "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=60&h=60&fit=crop&crop=face",
-              subscribers: "0", // This would need to be fetched separately
+              subscribers: channel.followers
+                ? channel.followers.length.toString()
+                : "0",
               isSubscribed: true,
               videos: [], // This would need to be fetched separately
               channelData: channel, // Keep original data
@@ -161,8 +165,8 @@ const Subscriptions = () => {
             // Fetch videos for this channel
             const videosResponse = await videoAPI.getAllVideos();
             const channelVideos =
-              videosResponse.videos?.filter(
-                (video) => video.userId === channel.id
+              videosResponse.filter(
+                (video) => video.owner?._id === channel.id
               ) || [];
 
             // Transform videos to match our structure
@@ -201,7 +205,7 @@ const Subscriptions = () => {
   };
 
   const handleVideoClick = (video) => {
-    setSelectedVideo(video);
+    navigate(`/user/video/${video._id || video.id}`);
   };
 
   const handleCloseVideo = () => {
@@ -325,7 +329,10 @@ const Subscriptions = () => {
           <h3>No subscriptions yet</h3>
           <p>Subscribe to channels to see their latest videos here</p>
           <div className="subscription-actions">
-            <button className="explore-btn" onClick={() => navigate("/")}>
+            <button
+              className="explore-btn"
+              onClick={() => navigate("/user/explore")}
+            >
               Explore Channels
             </button>
             <button
@@ -359,7 +366,7 @@ const Subscriptions = () => {
                 <div className="channel-actions">
                   <button
                     className="view-channel-btn"
-                    onClick={() => navigate(`/channel/${channel.id}`)}
+                    onClick={() => navigate(`/user/channel/${channel.id}`)}
                   >
                     View Channel
                   </button>

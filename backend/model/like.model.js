@@ -11,4 +11,5 @@ const likeSchema = new mongoose.Schema({
 
 likeSchema.index({ likeBy: 1, video: 1 }, { unique: true }); // One like per user per video
 
-export const Like = mongoose.model("Like", likeSchema);
+const Like = mongoose.model("Like", likeSchema);
+export default Like;

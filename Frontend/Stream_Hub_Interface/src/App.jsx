@@ -15,6 +15,9 @@ import VideoPlayer from "./components/User/VideoPlayer";
 import Settings from "./components/User/Settings";
 import UserProfile from "./components/User/UserProfile";
 import WebRTCLiveStream from "./components/User/WebRTCLiveStream";
+import ChannelView from "./components/User/ChannelView";
+import History from "./components/User/History";
+import ToastManager from "./components/ToastManager";
 
 // Error Boundary Component
 class ErrorBoundary extends React.Component {
@@ -101,16 +104,6 @@ function App() {
                 </ErrorBoundary>
               }
             />
-            <Route
-              path="/video/:videoId"
-              element={
-                <ErrorBoundary>
-                  <AuthProvider>
-                    <VideoPlayer />
-                  </AuthProvider>
-                </ErrorBoundary>
-              }
-            />
 
             {/* Protected user routes */}
             <Route
@@ -175,7 +168,9 @@ function App() {
               <Route
                 path="history"
                 element={
-                  <div className="coming-soon">History page coming soon!</div>
+                  <ErrorBoundary>
+                    <History />
+                  </ErrorBoundary>
                 }
               />
               <Route
@@ -220,11 +215,22 @@ function App() {
                   </ErrorBoundary>
                 }
               />
+              <Route
+                path="channel/:channelId"
+                element={
+                  <ErrorBoundary>
+                    <ChannelView />
+                  </ErrorBoundary>
+                }
+              />
             </Route>
             {/* Catch all route */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </BrowserRouter>
+
+        {/* Portal Components */}
+        <ToastManager />
       </AuthProvider>
     </ErrorBoundary>
   );

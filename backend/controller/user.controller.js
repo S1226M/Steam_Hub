@@ -28,13 +28,19 @@ const getUserStats = async (req, res) => {
     try {
         const userId = req.user._id;
         
+        // Get user data to calculate followers count
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+        
         // Get user's video count, likes, comments, etc.
         const stats = {
             totalVideos: 0,
             totalLikes: 0,
             totalComments: 0,
             totalViews: 0,
-            subscribers: 0
+            subscribers: user.followers ? user.followers.length : 0
         };
 
         // You can add more statistics here based on your models

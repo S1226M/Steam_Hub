@@ -17,6 +17,7 @@ import subscriptionRoutes from "./route/subscription.route.js";
 import adminRoutes from "./route/admin.route.js";
 import liveStreamRoutes from "./route/livestream.route.js";
 import webrtcRoutes from "./route/webrtc.route.js";
+import libraryRoutes from "./route/library.route.js";
 
 // ✅ Initialize dotenv
 dotenv.config();
@@ -51,6 +52,7 @@ app.use("/api/subscriptions", subscriptionRoutes);
 app.use("/api/admins", adminRoutes);
 app.use("/api/livestream", liveStreamRoutes);
 app.use("/api/webrtc", webrtcRoutes);
+app.use("/api/library", libraryRoutes);
 
 // ✅ Initialize WebRTC server
 const webrtcServer = new WebRTCServer(server);

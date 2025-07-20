@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import VideoPlayer from "./VideoPlayer";
 import "./Explore.css";
 
 const Explore = () => {
+  const navigate = useNavigate();
   const [videos, setVideos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -129,7 +131,7 @@ const Explore = () => {
     filter === "trending" ? videos.filter((video) => video.trending) : videos;
 
   const handleVideoClick = (video) => {
-    setSelectedVideo(video);
+    navigate(`/user/video/${video._id || video.id}`);
   };
 
   const handleCloseVideo = () => {

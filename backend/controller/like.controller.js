@@ -1,4 +1,4 @@
-import { Like } from "../model/like.model.js";
+import Like from "../model/like.model.js";
 import Video from "../model/video.model.js"; // ✅ Correct default import
 
 export const toggleVideoLike = async (req, res) => {

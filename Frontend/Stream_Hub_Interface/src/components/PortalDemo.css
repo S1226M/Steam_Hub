@@ -1,0 +1,261 @@
+.portal-demo {
+  padding: 40px;
+  max-width: 800px;
+  margin: 0 auto;
+  font-family: var(--font-family, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif);
+}
+
+.portal-demo h2 {
+  text-align: center;
+  color: var(--text-primary, #111827);
+  margin-bottom: 40px;
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.demo-section {
+  margin-bottom: 40px;
+  padding: 24px;
+  background: var(--bg-primary, #ffffff);
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  border: 1px solid var(--border-color, #e5e7eb);
+}
+
+.demo-section h3 {
+  color: var(--text-primary, #111827);
+  margin-bottom: 20px;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.demo-buttons {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+}
+
+.demo-btn {
+  padding: 12px 20px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.demo-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.demo-btn:active {
+  transform: translateY(0);
+}
+
+/* Button variants */
+.demo-btn.primary {
+  background: var(--primary-color, #3b82f6);
+  color: white;
+}
+
+.demo-btn.primary:hover {
+  background: var(--primary-dark, #2563eb);
+}
+
+.demo-btn.secondary {
+  background: var(--bg-secondary, #f3f4f6);
+  color: var(--text-primary, #111827);
+  border: 1px solid var(--border-color, #d1d5db);
+}
+
+.demo-btn.secondary:hover {
+  background: var(--bg-tertiary, #e5e7eb);
+}
+
+.demo-btn.success {
+  background: #10b981;
+  color: white;
+}
+
+.demo-btn.success:hover {
+  background: #059669;
+}
+
+.demo-btn.error {
+  background: #ef4444;
+  color: white;
+}
+
+.demo-btn.error:hover {
+  background: #dc2626;
+}
+
+.demo-btn.warning {
+  background: #f59e0b;
+  color: white;
+}
+
+.demo-btn.warning:hover {
+  background: #d97706;
+}
+
+.demo-btn.info {
+  background: #3b82f6;
+  color: white;
+}
+
+.demo-btn.info:hover {
+  background: #2563eb;
+}
+
+/* Modal demo content */
+.modal-demo-content {
+  color: var(--text-primary, #111827);
+}
+
+.modal-demo-content p {
+  margin-bottom: 16px;
+  line-height: 1.6;
+  color: var(--text-secondary, #6b7280);
+}
+
+.modal-features {
+  margin: 24px 0;
+  padding: 16px;
+  background: var(--bg-secondary, #f9fafb);
+  border-radius: 8px;
+  border-left: 4px solid var(--primary-color, #3b82f6);
+}
+
+.modal-features h4 {
+  margin: 0 0 12px 0;
+  color: var(--text-primary, #111827);
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.modal-features ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.modal-features li {
+  margin-bottom: 8px;
+  color: var(--text-secondary, #6b7280);
+  line-height: 1.5;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+  justify-content: flex-end;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .portal-demo {
+    background: var(--dark-bg-primary, #1f2937);
+  }
+
+  .demo-section {
+    background: var(--dark-bg-secondary, #111827);
+    border-color: var(--dark-border-color, #374151);
+  }
+
+  .demo-section h3 {
+    color: var(--dark-text-primary, #f9fafb);
+  }
+
+  .demo-btn.secondary {
+    background: var(--dark-bg-tertiary, #374151);
+    color: var(--dark-text-primary, #f9fafb);
+    border-color: var(--dark-border-color, #4b5563);
+  }
+
+  .demo-btn.secondary:hover {
+    background: var(--dark-bg-primary, #1f2937);
+  }
+
+  .modal-demo-content {
+    color: var(--dark-text-primary, #f9fafb);
+  }
+
+  .modal-demo-content p {
+    color: var(--dark-text-secondary, #9ca3af);
+  }
+
+  .modal-features {
+    background: var(--dark-bg-tertiary, #374151);
+  }
+
+  .modal-features h4 {
+    color: var(--dark-text-primary, #f9fafb);
+  }
+
+  .modal-features li {
+    color: var(--dark-text-secondary, #9ca3af);
+  }
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .portal-demo {
+    padding: 20px;
+  }
+
+  .demo-buttons {
+    grid-template-columns: 1fr;
+  }
+
+  .modal-actions {
+    flex-direction: column;
+  }
+
+  .modal-actions .demo-btn {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .portal-demo {
+    padding: 16px;
+  }
+
+  .portal-demo h2 {
+    font-size: 1.5rem;
+  }
+
+  .demo-section {
+    padding: 16px;
+  }
+
+  .demo-btn {
+    padding: 10px 16px;
+    font-size: 13px;
+  }
+}
+
+/* Focus styles for accessibility */
+.demo-btn:focus {
+  outline: 2px solid var(--primary-color, #3b82f6);
+  outline-offset: 2px;
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .demo-btn {
+    transition: none;
+  }
+
+  .demo-btn:hover {
+    transform: none;
+  }
+} 

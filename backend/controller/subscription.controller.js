@@ -949,7 +949,7 @@ export const getUserSubscriptions = async (req, res) => {
   try {
     const { userId } = req.params;
 
-    const user = await User.findById(userId).populate('following', 'username fullname profileimage');
+    const user = await User.findById(userId).populate('following', 'username fullname profileimage followers');
     if (!user) {
       return res.status(404).json({
         success: false,

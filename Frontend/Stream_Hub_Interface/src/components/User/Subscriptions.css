@@ -216,6 +216,15 @@
   height: 100%;
   object-fit: cover;
   transition: transform 0.3s ease;
+  animation: none !important;
+}
+
+/* Prevent any blinking effects on video thumbnails */
+.thumb-wrap,
+.thumb-wrap *,
+.video-card .thumb-wrap,
+.video-card .thumb-wrap * {
+  animation: none !important;
 }
 
 .video-card:hover .thumb-wrap img {
@@ -274,6 +283,13 @@
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+/* Prevent blinking effects on usernames */
+.channel-name,
+.channel-details h3 {
+  animation: none !important;
+  transition: color 0.2s ease;
 }
 
 .meta {

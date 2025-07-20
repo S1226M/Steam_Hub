@@ -33,6 +33,7 @@ const makeRequest = async (endpoint, options = {}) => {
 export const videoAPI = {
   getAllVideos: () => makeRequest('/videos'),
   getVideoById: (id) => makeRequest(`/videos/${id}`),
+  getVideosByUser: (userId) => makeRequest(`/videos/user/${userId}`),
   uploadVideo: (formData, endpoint = '/upload') => {
     const token = localStorage.getItem('token');
     return fetch(`${API_BASE_URL}/videos${endpoint}`, {
@@ -201,6 +202,56 @@ export const liveStreamAPI = {
     method: 'DELETE',
   }),
   getActiveStreams: () => makeRequest('/livestream/active/all'),
+};
+
+// Library API
+export const libraryAPI = {
+  // History
+  getUserHistory: (userId, page = 1, limit = 20) => 
+    makeRequest(`/videos/history/${userId}?page=${page}&limit=${limit}`),
+  
+  addToHistory: (userId, videoId, watchDuration = 0, completed = false) => 
+    makeRequest('/library/history/add', {
+      method: 'POST',
+      body: JSON.stringify({ userId, videoId, watchDuration, completed }),
+    }),
+  
+  removeFromHistory: (userId, videoId) => 
+    makeRequest(`/library/history/${userId}/${videoId}`, {
+      method: 'DELETE',
+    }),
+  
+  clearHistory: (userId) => 
+    makeRequest(`/library/history/${userId}`, {
+      method: 'DELETE',
+    }),
+  
+  // Liked Videos
+  getLikedVideos: (userId, page = 1, limit = 20) => 
+    makeRequest(`/videos/liked/${userId}?page=${page}&limit=${limit}`),
+  
+  // Playlists
+  getUserPlaylists: (userId, page = 1, limit = 20) => 
+    makeRequest(`/library/playlists/${userId}?page=${page}&limit=${limit}`),
+  
+  // Downloads
+  getUserDownloads: (userId, page = 1, limit = 20) => 
+    makeRequest(`/videos/downloads/${userId}?page=${page}&limit=${limit}`),
+  
+  addToDownloads: (userId, videoId, quality = "720p") => 
+    makeRequest('/library/downloads/add', {
+      method: 'POST',
+      body: JSON.stringify({ userId, videoId, quality }),
+    }),
+  
+  removeFromDownloads: (userId, videoId) => 
+    makeRequest(`/library/downloads/${userId}/${videoId}`, {
+      method: 'DELETE',
+    }),
+  
+  // Library Summary
+  getLibrarySummary: (userId) => 
+    makeRequest(`/library/summary/${userId}`),
 };
 
 // WebRTC Live Stream API

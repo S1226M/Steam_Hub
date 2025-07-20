@@ -186,7 +186,7 @@ export default function Home() {
   };
 
   const handleVideoClick = (video) => {
-    navigate(`/video/${video._id || video.id}`);
+    navigate(`/user/video/${video._id || video.id}`);
   };
 
   const formatNumber = (num) => {
@@ -218,9 +218,36 @@ export default function Home() {
   if (loading) {
     return (
       <div className="home-container">
-        <div className="loading-container">
-          <div className="loading-spinner"></div>
-          <p>Loading amazing videos...</p>
+        <div className="categories-container">
+          <div className="categories">
+            {categories.map((cat) => (
+              <button
+                key={cat}
+                className={`category-btn ${cat === "All" ? "active" : ""}`}
+                onClick={() => handleCategoryClick(cat)}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="videos-section">
+          <div className="section-header">
+            <h2>Recommended Videos</h2>
+            <p className="video-count">Loading...</p>
+          </div>
+          <div className="videos-grid">
+            {Array.from({ length: 8 }, (_, i) => (
+              <div key={i} className="video-card skeleton">
+                <div className="thumb-wrap skeleton-thumb"></div>
+                <div className="info">
+                  <div className="title skeleton-text"></div>
+                  <div className="channel skeleton-text"></div>
+                  <div className="meta skeleton-text"></div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     );
@@ -314,9 +341,9 @@ export default function Home() {
                   }
                 }}
               >
-                                <div className="thumb-wrap">
-                  <img 
-                    src={vid.thumbnail} 
+                <div className="thumb-wrap">
+                  <img
+                    src={vid.thumbnail}
                     alt={vid.title}
                     loading="lazy"
                     onError={(e) => {
@@ -381,7 +408,15 @@ export default function Home() {
                 </div>
                 <div className="info">
                   <div className="title">{vid.title}</div>
-                  <div className="channel">
+                  <div
+                    className="channel"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (vid.owner?._id) {
+                        navigate(`/user/channel/${vid.owner._id}`);
+                      }
+                    }}
+                  >
                     {vid.owner?.fullname || vid.channel || "Unknown"}
                   </div>
                   <div className="meta">

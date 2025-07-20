@@ -122,6 +122,15 @@
   height: 100%;
   object-fit: cover;
   transition: transform 0.3s ease;
+  animation: none !important;
+}
+
+/* Prevent any blinking effects on video thumbnails */
+.thumb-wrap,
+.thumb-wrap *,
+.video-card .thumb-wrap,
+.video-card .thumb-wrap * {
+  animation: none !important;
 }
 
 .video-card:hover .thumb-wrap img {
@@ -218,6 +227,8 @@
   font-size: 0.9rem;
   color: var(--text-secondary);
   margin-bottom: 6px;
+  animation: none !important;
+  transition: color 0.2s ease;
 }
 
 .meta {
