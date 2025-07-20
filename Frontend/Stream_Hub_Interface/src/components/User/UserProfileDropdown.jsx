@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
+import { useNavigate } from "react-router-dom";
 import "./UserProfileDropdown.css";
 
 const UserProfileDropdown = ({ isOpen, onClose, user, triggerRef, onLogout }) => {
+  const navigate = useNavigate();
   const [dropdownPosition, setDropdownPosition] = useState({
     top: 0,
     right: 0,
@@ -27,7 +29,7 @@ const UserProfileDropdown = ({ isOpen, onClose, user, triggerRef, onLogout }) =>
 
   const handleProfileClick = () => {
     // Navigate to profile page
-    console.log("Navigate to profile");
+    navigate('/user/profile');
     onClose();
   };
 

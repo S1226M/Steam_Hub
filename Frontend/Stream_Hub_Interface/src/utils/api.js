@@ -128,10 +128,28 @@ export const commentAPI = {
 // User API
 export const userAPI = {
   getProfile: () => makeRequest('/users/profile'),
-  updateProfile: (userData) => makeRequest('/users/profile', {
-    method: 'PUT',
-    body: JSON.stringify(userData),
-  }),
+  updateProfile: (userId, formData) => {
+    const token = localStorage.getItem('token');
+    return fetch(`${API_BASE_URL}/users/${userId}/profile`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+      body: formData,
+    })
+    .then(response => {
+      if (!response.ok) {
+        return response.json().then(errorData => {
+          throw new Error(errorData.message || errorData.error || `HTTP error! status: ${response.status}`);
+        });
+      }
+      return response.json();
+    })
+    .catch(error => {
+      console.error('Profile update error:', error);
+      throw error;
+    });
+  },
   changePassword: (passwords) => makeRequest('/users/change-password', {
     method: 'PUT',
     body: JSON.stringify(passwords),
@@ -184,6 +202,30 @@ export const authAPI = {
   }),
 };
 
+// Watch Video Log API (One User Per View)
+export const watchLogAPI = {
+  // Log a video view (one per user per video per day)
+  logVideoView: (videoId, watchData = {}) => 
+    makeRequest(`/watchlogs/log/${videoId}`, {
+      method: 'POST',
+      body: JSON.stringify(watchData),
+    }),
+  
+  // Get user's watch history
+  getWatchHistory: (page = 1, limit = 20) => 
+    makeRequest(`/watchlogs/history?page=${page}&limit=${limit}`),
+  
+  // Get video view statistics (for video owners)
+  getVideoStats: (videoId) => 
+    makeRequest(`/watchlogs/stats/${videoId}`),
+  
+  // Mark video as completed
+  markVideoCompleted: (videoId) => 
+    makeRequest(`/watchlogs/complete/${videoId}`, {
+      method: 'PUT',
+    }),
+};
+
 export default {
   videoAPI,
   likeAPI,
@@ -191,4 +233,5 @@ export default {
   userAPI,
   authAPI,
   subscriptionAPI,
+  watchLogAPI,
 }; 

@@ -17,6 +17,8 @@ export default function VideoUpload() {
   });
   const [selectedFile, setSelectedFile] = useState(null);
   const [thumbnailPreview, setThumbnailPreview] = useState(null);
+  const [autoThumbnailPreview, setAutoThumbnailPreview] = useState(null);
+  const [useCustomThumbnail, setUseCustomThumbnail] = useState(false);
   const fileInputRef = useRef(null);
   const thumbnailInputRef = useRef(null);
 
@@ -52,7 +54,39 @@ export default function VideoUpload() {
 
       setSelectedFile(file);
       setUploadStatus('File selected: ' + file.name);
+      
+      // Generate auto thumbnail preview
+      generateAutoThumbnailPreview(file);
     }
+  };
+
+  const generateAutoThumbnailPreview = (videoFile) => {
+    const video = document.createElement('video');
+    video.preload = 'metadata';
+    
+    video.onloadedmetadata = () => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      
+      // Set canvas size
+      canvas.width = 320;
+      canvas.height = 180;
+      
+      // Seek to 20% of video duration or 5 seconds
+      const seekTime = Math.max(5, video.duration * 0.2);
+      video.currentTime = seekTime;
+      
+      video.onseeked = () => {
+        // Draw video frame to canvas
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        
+        // Convert to data URL
+        const thumbnailUrl = canvas.toDataURL('image/jpeg', 0.8);
+        setAutoThumbnailPreview(thumbnailUrl);
+      };
+    };
+    
+    video.src = URL.createObjectURL(videoFile);
   };
 
   const handleThumbnailSelect = (event) => {
@@ -105,8 +139,8 @@ export default function VideoUpload() {
       uploadFormData.append('isPrivate', formData.isPrivate);
       uploadFormData.append('userId', user._id);
 
-      // Add thumbnail if selected
-      if (thumbnailInputRef.current?.files[0]) {
+      // Add thumbnail if custom thumbnail is selected
+      if (useCustomThumbnail && thumbnailInputRef.current?.files[0]) {
         uploadFormData.append('thumbnail', thumbnailInputRef.current.files[0]);
       }
 
@@ -140,6 +174,8 @@ export default function VideoUpload() {
         });
         setSelectedFile(null);
         setThumbnailPreview(null);
+        setAutoThumbnailPreview(null);
+        setUseCustomThumbnail(false);
         setUploadProgress(0);
         setUploadStatus('');
         setIsUploading(false);
@@ -169,6 +205,8 @@ export default function VideoUpload() {
       });
       setSelectedFile(null);
       setThumbnailPreview(null);
+      setAutoThumbnailPreview(null);
+      setUseCustomThumbnail(false);
       setUploadProgress(0);
       setUploadStatus('');
     }
@@ -227,20 +265,55 @@ export default function VideoUpload() {
 
               {/* Thumbnail Selection */}
               <div className="form-group">
-                <label htmlFor="thumbnailFile">Thumbnail (Optional)</label>
-                <input
-                  ref={thumbnailInputRef}
-                  type="file"
-                  id="thumbnailFile"
-                  accept="image/*"
-                  onChange={handleThumbnailSelect}
-                  disabled={isUploading}
-                />
-                {thumbnailPreview && (
-                  <div className="thumbnail-preview">
-                    <img src={thumbnailPreview} alt="Thumbnail preview" />
+                <label>Thumbnail</label>
+                
+                {/* Auto Thumbnail Preview */}
+                {autoThumbnailPreview && (
+                  <div className="thumbnail-option">
+                    <label className="thumbnail-option-label">
+                      <input
+                        type="radio"
+                        name="thumbnailType"
+                        value="auto"
+                        checked={!useCustomThumbnail}
+                        onChange={() => setUseCustomThumbnail(false)}
+                        disabled={isUploading}
+                      />
+                      <span>Use Auto-Generated Thumbnail</span>
+                    </label>
+                    <div className="thumbnail-preview">
+                      <img src={autoThumbnailPreview} alt="Auto thumbnail preview" />
+                    </div>
                   </div>
                 )}
+                
+                {/* Custom Thumbnail Option */}
+                <div className="thumbnail-option">
+                  <label className="thumbnail-option-label">
+                    <input
+                      type="radio"
+                      name="thumbnailType"
+                      value="custom"
+                      checked={useCustomThumbnail}
+                      onChange={() => setUseCustomThumbnail(true)}
+                      disabled={isUploading}
+                    />
+                    <span>Upload Custom Thumbnail</span>
+                  </label>
+                  <input
+                    ref={thumbnailInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleThumbnailSelect}
+                    disabled={isUploading || !useCustomThumbnail}
+                    style={{ marginTop: '10px', display: useCustomThumbnail ? 'block' : 'none' }}
+                  />
+                  {thumbnailPreview && useCustomThumbnail && (
+                    <div className="thumbnail-preview">
+                      <img src={thumbnailPreview} alt="Custom thumbnail preview" />
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Title */}

@@ -12,6 +12,9 @@ import Explore from "./components/User/Explore";
 import Subscriptions from "./components/User/Subscriptions";
 import Library from "./components/User/Library";
 import VideoPlayer from "./components/User/VideoPlayer";
+import History from "./components/User/History";
+import LikedVideos from "./components/User/LikedVideos";
+import UserProfile from "./components/User/UserProfile";
 
 // Error Boundary Component
 class ErrorBoundary extends React.Component {
@@ -90,17 +93,11 @@ function App() {
                 <Signup />
               </ErrorBoundary>
             } />
-<<<<<<< Updated upstream
-
-=======
             <Route path="/video/:videoId" element={
               <ErrorBoundary>
-                <AuthProvider>
-                  <VideoPlayer />
-                </AuthProvider>
+                <VideoPlayer />
               </ErrorBoundary>
             } />
->>>>>>> Stashed changes
             {/* Protected user routes */}
             <Route path="/user/*" element={
               <ErrorBoundary>
@@ -138,35 +135,61 @@ function App() {
               <Route
                 path="history"
                 element={
-                  <div className="coming-soon">History page coming soon!</div>
+                  <ErrorBoundary>
+                    <History />
+                  </ErrorBoundary>
                 }
               />
               <Route
                 path="liked"
                 element={
-                  <div className="coming-soon">Liked videos page coming soon!</div>
+                  <ErrorBoundary>
+                    <LikedVideos />
+                  </ErrorBoundary>
+                }
+              />
+              <Route
+                path="profile"
+                element={
+                  <ErrorBoundary>
+                    <UserProfile />
+                  </ErrorBoundary>
                 }
               />
               <Route
                 path="downloads"
                 element={
-                  <div className="coming-soon">Downloads page coming soon!</div>
+                  <div className="empty-state">
+                    <h3>Downloads</h3>
+                    <p>No downloads available</p>
+                  </div>
                 }
               />
               <Route
                 path="settings"
                 element={
-                  <div className="coming-soon">Settings page coming soon!</div>
+                  <div className="empty-state">
+                    <h3>Settings</h3>
+                    <p>Settings page under development</p>
+                  </div>
                 }
               />
               <Route
                 path="help"
-                element={<div className="coming-soon">Help page coming soon!</div>}
+                element={
+                  <div className="empty-state">
+                    <h3>Help</h3>
+                    <p>Help documentation coming soon</p>
+                  </div>
+                }
               />
               <Route
                 path="feedback"
                 element={
-                  <div className="coming-soon">Feedback page coming soon!</div>
+                  <div className="empty-state">
+                    <h3>Feedback</h3>
+                    <p>Feedback system under development</p>
+                  </div>
                 }
               />
             </Route>

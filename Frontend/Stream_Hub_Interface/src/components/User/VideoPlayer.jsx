@@ -1,13 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { videoAPI, likeAPI, commentAPI, subscriptionAPI } from '../../utils/api';
+import { videoAPI, likeAPI, commentAPI, subscriptionAPI, watchLogAPI } from '../../utils/api';
 import './VideoPlayer.css';
 
 export default function VideoPlayer() {
   const { videoId } = useParams();
   const navigate = useNavigate();
   const { user, getAuthHeaders } = useAuth();
+  const videoRef = useRef(null);
   
   console.log('VideoPlayer Debug:', {
     videoId,
@@ -26,10 +27,71 @@ export default function VideoPlayer() {
   const [showComments, setShowComments] = useState(true);
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [message, setMessage] = useState(null);
+  const [watchDuration, setWatchDuration] = useState(0);
+  const [hasLoggedView, setHasLoggedView] = useState(false);
+  const [isLikeLoading, setIsLikeLoading] = useState(false);
 
   useEffect(() => {
     loadVideoData();
   }, [videoId]);
+
+  // Log video view when user starts watching
+  const logVideoView = async (duration = 0, completed = false) => {
+    if (!user || hasLoggedView) return;
+    
+    try {
+      const response = await watchLogAPI.logVideoView(videoId, {
+        watchDuration: duration,
+        completed
+      });
+      
+      console.log('Video view logged:', response);
+      setHasLoggedView(true);
+      
+      // Update video view count if it's a new view
+      if (response.isNewView && video) {
+        setVideo(prev => ({
+          ...prev,
+          views: (prev.views || 0) + 1
+        }));
+      }
+    } catch (error) {
+      console.error('Error logging video view:', error);
+    }
+  };
+
+  // Handle video time update to track watch duration
+  const handleTimeUpdate = () => {
+    if (!videoRef.current) return;
+    
+    const currentTime = videoRef.current.currentTime;
+    const duration = videoRef.current.duration;
+    
+    setWatchDuration(currentTime);
+    
+    // Log view after 5 seconds of watching
+    if (currentTime >= 5 && !hasLoggedView) {
+      logVideoView(currentTime, false);
+    }
+    
+    // Mark as completed when user watches 90% of the video
+    if (duration > 0 && currentTime >= duration * 0.9 && !hasLoggedView) {
+      logVideoView(currentTime, true);
+      markVideoCompleted();
+    }
+  };
+
+  // Mark video as completed
+  const markVideoCompleted = async () => {
+    if (!user) return;
+    
+    try {
+      await watchLogAPI.markVideoCompleted(videoId);
+      console.log('Video marked as completed');
+    } catch (error) {
+      console.error('Error marking video completed:', error);
+    }
+  };
 
   const loadVideoData = async () => {
     try {
@@ -97,20 +159,35 @@ export default function VideoPlayer() {
       return;
     }
 
+    // Prevent multiple rapid clicks
+    if (isLikeLoading) {
+      return;
+    }
+
+    setIsLikeLoading(true);
+
     try {
-      await likeAPI.toggleLike(videoId, user._id);
+      const response = await likeAPI.toggleLike(videoId, user._id);
       
-      // Update local state
-      setIsLiked(!isLiked);
-      setLikeCount(prev => isLiked ? prev - 1 : prev + 1);
-      
-      // Show success message
-      setMessage({ type: 'success', text: isLiked ? 'Video unliked' : 'Video liked!' });
-      setTimeout(() => setMessage(null), 2000);
+      // Update local state based on response
+      if (response.success) {
+        setIsLiked(response.isLiked);
+        setLikeCount(prev => response.isLiked ? prev + 1 : prev - 1);
+        
+        // Show success message
+        setMessage({ type: 'success', text: response.message });
+        setTimeout(() => setMessage(null), 2000);
+      } else {
+        // Handle error response
+        setMessage({ type: 'error', text: response.message || 'Failed to update like' });
+        setTimeout(() => setMessage(null), 3000);
+      }
     } catch (error) {
       console.error('Error toggling like:', error);
       setMessage({ type: 'error', text: 'Failed to update like' });
       setTimeout(() => setMessage(null), 3000);
+    } finally {
+      setIsLikeLoading(false);
     }
   };
 
@@ -325,10 +402,18 @@ export default function VideoPlayer() {
         <div className="video-player-section">
           <div className="video-player-wrapper">
             <video
+              ref={videoRef}
               className="video-player"
               controls
               poster={video.thumbnail}
               src={video.videoUrl}
+              onTimeUpdate={handleTimeUpdate}
+              onPlay={() => {
+                // Log view when user starts playing (if not already logged)
+                if (!hasLoggedView) {
+                  logVideoView(0, false);
+                }
+              }}
             >
               Your browser does not support the video tag.
             </video>
@@ -346,12 +431,17 @@ export default function VideoPlayer() {
               
               <div className="video-actions">
                 <button 
-                  className={`action-btn like-btn ${isLiked ? 'liked' : ''}`}
+                  className={`action-btn like-btn ${isLiked ? 'liked' : ''} ${isLikeLoading ? 'loading' : ''}`}
                   onClick={handleLike}
+                  disabled={isLikeLoading}
                 >
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M20.84 4.61C20.3292 4.099 19.7228 3.69364 19.0554 3.41708C18.3879 3.14052 17.6725 2.99817 16.95 2.99817C16.2275 2.99817 15.5121 3.14052 14.8446 3.41708C14.1772 3.69364 13.5708 4.099 13.06 4.61L12 5.67L10.94 4.61C9.9083 3.5783 8.50903 2.9987 7.05 2.9987C5.59096 2.9987 4.19169 3.5783 3.16 4.61C2.1283 5.6417 1.5487 7.04097 1.5487 8.5C1.5487 9.95903 2.1283 11.3583 3.16 12.39L12 21.23L20.84 12.39C21.351 11.8792 21.7564 11.2728 22.0329 10.6054C22.3095 9.93789 22.4518 9.22249 22.4518 8.5C22.4518 7.77751 22.3095 7.0621 22.0329 6.39464C21.7564 5.72718 21.351 5.12075 20.84 4.61Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
+                  {isLikeLoading ? (
+                    <div className="like-loading-spinner"></div>
+                  ) : (
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M20.84 4.61C20.3292 4.099 19.7228 3.69364 19.0554 3.41708C18.3879 3.14052 17.6725 2.99817 16.95 2.99817C16.2275 2.99817 15.5121 3.14052 14.8446 3.41708C14.1772 3.69364 13.5708 4.099 13.06 4.61L12 5.67L10.94 4.61C9.9083 3.5783 8.50903 2.9987 7.05 2.9987C5.59096 2.9987 4.19169 3.5783 3.16 4.61C2.1283 5.6417 1.5487 7.04097 1.5487 8.5C1.5487 9.95903 2.1283 11.3583 3.16 12.39L12 21.23L20.84 12.39C21.351 11.8792 21.7564 11.2728 22.0329 10.6054C22.3095 9.93789 22.4518 9.22249 22.4518 8.5C22.4518 7.77751 22.3095 7.0621 22.0329 6.39464C21.7564 5.72718 21.351 5.12075 20.84 4.61Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  )}
                   {formatNumber(likeCount)}
                 </button>
                 

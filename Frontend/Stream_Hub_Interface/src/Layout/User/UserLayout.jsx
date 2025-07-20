@@ -183,7 +183,7 @@ export default function UserLayout() {
               </NavLink>
             </li>
             <li>
-              <NavLink to="/explore" className="link" onClick={closeMobileMenu}>
+              <NavLink to="/user/explore" className="link" onClick={closeMobileMenu}>
                 <svg
                   width="20"
                   height="20"
@@ -204,7 +204,7 @@ export default function UserLayout() {
             </li>
             <li>
               <NavLink
-                to="/subscriptions"
+                to="/user/subscriptions"
                 className="link"
                 onClick={closeMobileMenu}
               >
@@ -246,7 +246,7 @@ export default function UserLayout() {
           <h4 className="section-title">Library</h4>
           <ul className="nav-links">
             <li>
-              <NavLink to="/library" className="link" onClick={closeMobileMenu}>
+              <NavLink to="/user/library" className="link" onClick={closeMobileMenu}>
                 <svg
                   width="20"
                   height="20"
@@ -273,7 +273,7 @@ export default function UserLayout() {
               </NavLink>
             </li>
             <li>
-              <NavLink to="/history" className="link" onClick={closeMobileMenu}>
+              <NavLink to="/user/history" className="link" onClick={closeMobileMenu}>
                 <svg
                   width="20"
                   height="20"
@@ -298,7 +298,7 @@ export default function UserLayout() {
               </NavLink>
             </li>
             <li>
-              <NavLink to="/liked" className="link" onClick={closeMobileMenu}>
+              <NavLink to="/user/liked" className="link" onClick={closeMobileMenu}>
                 <svg
                   width="20"
                   height="20"
@@ -319,7 +319,7 @@ export default function UserLayout() {
             </li>
             <li>
               <NavLink
-                to="/downloads"
+                to="/user/downloads"
                 className="link"
                 onClick={closeMobileMenu}
               >
@@ -400,7 +400,7 @@ export default function UserLayout() {
           <ul className="nav-links">
             <li>
               <NavLink
-                to="/settings"
+                to="/user/settings"
                 className="link"
                 onClick={closeMobileMenu}
               >
@@ -430,7 +430,7 @@ export default function UserLayout() {
               </NavLink>
             </li>
             <li>
-              <NavLink to="/help" className="link" onClick={closeMobileMenu}>
+              <NavLink to="/user/help" className="link" onClick={closeMobileMenu}>
                 <svg
                   width="20"
                   height="20"
@@ -458,7 +458,7 @@ export default function UserLayout() {
             </li>
             <li>
               <NavLink
-                to="/feedback"
+                to="/user/feedback"
                 className="link"
                 onClick={closeMobileMenu}
               >

@@ -10,85 +10,7 @@ const Subscriptions = () => {
   const [selectedVideo, setSelectedVideo] = useState(null);
 
   // Mock subscriptions data
-  const mockSubscriptions = [
-    {
-      id: 1,
-      channelName: "TechReviews Pro",
-      channelAvatar: "https://picsum.photos/60/60?random=1",
-      subscribers: "2.1M",
-      isSubscribed: true,
-      videos: [
-        {
-          id: 101,
-          title: "Latest Smartphone Review 2024",
-          views: "450K",
-          date: "1 day ago",
-          length: "15:30",
-          thumbnail: "https://picsum.photos/320/180?random=101",
-          videoUrl:
-            "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4",
-        },
-        {
-          id: 102,
-          title: "AI Technology Trends",
-          views: "320K",
-          date: "3 days ago",
-          length: "22:15",
-          thumbnail: "https://picsum.photos/320/180?random=102",
-          videoUrl:
-            "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_2mb.mp4",
-        },
-      ],
-    },
-    {
-      id: 2,
-      channelName: "Chef's Kitchen",
-      channelAvatar: "https://picsum.photos/60/60?random=2",
-      subscribers: "890K",
-      isSubscribed: true,
-      videos: [
-        {
-          id: 201,
-          title: "Italian Pasta Masterclass",
-          views: "180K",
-          date: "2 days ago",
-          length: "18:45",
-          thumbnail: "https://picsum.photos/320/180?random=201",
-          videoUrl:
-            "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4",
-        },
-      ],
-    },
-    {
-      id: 3,
-      channelName: "GamingZone",
-      channelAvatar: "https://picsum.photos/60/60?random=3",
-      subscribers: "5.2M",
-      isSubscribed: true,
-      videos: [
-        {
-          id: 301,
-          title: "Epic Gaming Highlights",
-          views: "1.2M",
-          date: "5 hours ago",
-          length: "25:12",
-          thumbnail: "https://picsum.photos/320/180?random=301",
-          videoUrl:
-            "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_5mb.mp4",
-        },
-        {
-          id: 302,
-          title: "New Game Release Review",
-          views: "890K",
-          date: "1 day ago",
-          length: "32:45",
-          thumbnail: "https://picsum.photos/320/180?random=302",
-          videoUrl:
-            "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_2mb.mp4",
-        },
-      ],
-    },
-  ];
+
 
   useEffect(() => {
     const fetchSubscriptions = async () => {
@@ -96,23 +18,13 @@ const Subscriptions = () => {
         setLoading(true);
         setError(null);
 
-        // Try to fetch from API first
         const response = await axios.get(
           "http://localhost:5000/api/subscriptions"
         );
-
-        if (response.data && response.data.length > 0) {
-          setSubscriptions(response.data);
-        } else {
-          // Fallback to mock data
-          setSubscriptions(mockSubscriptions);
-        }
+        setSubscriptions(Array.isArray(response.data) ? response.data : []);
       } catch (err) {
         console.error("Subscriptions fetch failed:", err);
-        setSubscriptions(mockSubscriptions);
-        setError(
-          "Could not load subscriptions from server. Showing demo content."
-        );
+        setError("Could not load subscriptions from server.");
       } finally {
         setLoading(false);
       }
@@ -131,17 +43,17 @@ const Subscriptions = () => {
 
   const handleUnsubscribe = (channelId) => {
     setSubscriptions((prev) =>
-      prev.map((sub) =>
+      Array.isArray(prev) ? prev.map((sub) =>
         sub.id === channelId ? { ...sub, isSubscribed: false } : sub
-      )
+      ) : []
     );
   };
 
   const handleSubscribe = (channelId) => {
     setSubscriptions((prev) =>
-      prev.map((sub) =>
+      Array.isArray(prev) ? prev.map((sub) =>
         sub.id === channelId ? { ...sub, isSubscribed: true } : sub
-      )
+      ) : []
     );
   };
 
@@ -156,7 +68,9 @@ const Subscriptions = () => {
     );
   }
 
-  const subscribedChannels = subscriptions.filter((sub) => sub.isSubscribed);
+  const subscribedChannels = Array.isArray(subscriptions) 
+    ? subscriptions.filter((sub) => sub.isSubscribed) 
+    : [];
 
   return (
     <div className="subscriptions-container">
@@ -216,7 +130,7 @@ const Subscriptions = () => {
         </div>
       ) : (
         <div className="subscriptions-content">
-          {subscribedChannels.map((channel) => (
+          {Array.isArray(subscribedChannels) && subscribedChannels.map((channel) => (
             <div key={channel.id} className="channel-section">
               <div className="channel-header">
                 <div className="channel-info">
@@ -248,7 +162,7 @@ const Subscriptions = () => {
               </div>
 
               <div className="channel-videos">
-                {channel.videos.map((video) => (
+                {Array.isArray(channel.videos) && channel.videos.map((video) => (
                   <div
                     className="video-card"
                     key={video.id}

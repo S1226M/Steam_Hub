@@ -11,98 +11,7 @@ const Library = () => {
   const [selectedVideo, setSelectedVideo] = useState(null);
 
   // Mock library data
-  const mockLibraryData = {
-    history: [
-      {
-        id: 1,
-        title: "Amazing Tech Review: Latest Smartphone 2024",
-        channel: "TechReviews Pro",
-        views: "2.1M",
-        date: "2 days ago",
-        length: "12:34",
-        thumbnail: "https://picsum.photos/320/180?random=1",
-        videoUrl:
-          "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4",
-        watchedAt: "2024-01-15T10:30:00Z",
-      },
-      {
-        id: 2,
-        title: "Cooking Masterclass: Italian Pasta Secrets",
-        channel: "Chef's Kitchen",
-        views: "890K",
-        date: "1 week ago",
-        length: "18:45",
-        thumbnail: "https://picsum.photos/320/180?random=2",
-        videoUrl:
-          "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_2mb.mp4",
-        watchedAt: "2024-01-14T15:20:00Z",
-      },
-      {
-        id: 3,
-        title: "Epic Gaming Moments: Battle Royale Highlights",
-        channel: "GamingZone",
-        views: "5.2M",
-        date: "3 days ago",
-        length: "25:12",
-        thumbnail: "https://picsum.photos/320/180?random=3",
-        videoUrl:
-          "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_5mb.mp4",
-        watchedAt: "2024-01-13T20:15:00Z",
-      },
-    ],
-    liked: [
-      {
-        id: 4,
-        title: "Travel Vlog: Exploring Hidden Beaches in Bali",
-        channel: "Wanderlust",
-        views: "1.4M",
-        date: "5 days ago",
-        length: "32:18",
-        thumbnail: "https://picsum.photos/320/180?random=4",
-        videoUrl:
-          "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4",
-        likedAt: "2024-01-12T14:45:00Z",
-      },
-      {
-        id: 5,
-        title: "Workout Routine: Full Body HIIT Training",
-        channel: "FitLife",
-        views: "756K",
-        date: "1 day ago",
-        length: "28:33",
-        thumbnail: "https://picsum.photos/320/180?random=5",
-        videoUrl:
-          "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_2mb.mp4",
-        likedAt: "2024-01-11T09:30:00Z",
-      },
-    ],
-    playlists: [
-      {
-        id: 1,
-        name: "My Tech Playlist",
-        description: "Best tech reviews and tutorials",
-        videoCount: 12,
-        thumbnail: "https://picsum.photos/320/180?random=10",
-        lastUpdated: "2 days ago",
-      },
-      {
-        id: 2,
-        name: "Workout Motivation",
-        description: "High-energy workout videos",
-        videoCount: 8,
-        thumbnail: "https://picsum.photos/320/180?random=11",
-        lastUpdated: "1 week ago",
-      },
-      {
-        id: 3,
-        name: "Cooking Inspiration",
-        description: "Delicious recipes to try",
-        videoCount: 15,
-        thumbnail: "https://picsum.photos/320/180?random=12",
-        lastUpdated: "3 days ago",
-      },
-    ],
-  };
+
 
   useEffect(() => {
     const fetchLibraryData = async () => {
@@ -110,21 +19,12 @@ const Library = () => {
         setLoading(true);
         setError(null);
 
-        // Try to fetch from API first
         const response = await axios.get("http://localhost:5000/api/library");
-
-        if (response.data) {
-          setVideos(response.data[activeTab] || []);
-        } else {
-          // Fallback to mock data
-          setVideos(mockLibraryData[activeTab] || []);
-        }
+        const tabData = response.data?.[activeTab];
+        setVideos(Array.isArray(tabData) ? tabData : []);
       } catch (err) {
         console.error("Library fetch failed:", err);
-        setVideos(mockLibraryData[activeTab] || []);
-        setError(
-          "Could not load library data from server. Showing demo content."
-        );
+        setError("Could not load library data from server.");
       } finally {
         setLoading(false);
       }
@@ -271,8 +171,8 @@ const Library = () => {
 
       <div className="library-content">
         {activeTab === "playlists" ? (
-          <div className="playlists-grid">
-            {videos.map((playlist) => (
+                  <div className="playlists-grid">
+          {Array.isArray(videos) && videos.map((playlist) => (
               <div key={playlist.id} className="playlist-card">
                 <div className="playlist-thumb">
                   <img
@@ -307,8 +207,8 @@ const Library = () => {
             ))}
           </div>
         ) : (
-          <div className="videos-grid">
-            {videos.map((video) => (
+                  <div className="videos-grid">
+          {Array.isArray(videos) && videos.map((video) => (
               <div
                 className="video-card"
                 key={video.id}

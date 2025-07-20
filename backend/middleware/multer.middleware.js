@@ -22,6 +22,29 @@ const videoFilter = (req, file, cb) => {
   cb("❌ Only video files are allowed!");
 };
 
-const upload = multer({ storage, fileFilter: videoFilter });
+const imageFilter = (req, file, cb) => {
+  const allowed = /jpg|jpeg|png|gif|webp/;
+  const extname = allowed.test(path.extname(file.originalname).toLowerCase());
+  if (extname) return cb(null, true);
+  cb("❌ Only image files are allowed!");
+};
 
+const fileFilter = (req, file, cb) => {
+  if (file.fieldname === 'video') {
+    return videoFilter(req, file, cb);
+  } else if (file.fieldname === 'thumbnail') {
+    return imageFilter(req, file, cb);
+  }
+  cb("❌ Invalid file type!");
+};
+
+const upload = multer({ storage, fileFilter });
+
+// Single video upload (for backward compatibility)
+const uploadVideo = multer({ storage, fileFilter: videoFilter });
+
+// Multiple files upload (video + thumbnail)
+const uploadVideoWithThumbnail = multer({ storage, fileFilter });
+
+export { uploadVideo, uploadVideoWithThumbnail };
 export default upload;

@@ -291,22 +291,38 @@ const AdminLayout = () => {
           <Route
             path="videos"
             element={
-              <div className="coming-soon">Videos Management coming soon!</div>
+              <div className="empty-state">
+                <h3>Videos Management</h3>
+                <p>Video management system under development</p>
+              </div>
             }
           />
           <Route
             path="users"
             element={
-              <div className="coming-soon">Users Management coming soon!</div>
+              <div className="empty-state">
+                <h3>Users Management</h3>
+                <p>User management system under development</p>
+              </div>
             }
           />
           <Route
             path="analytics"
-            element={<div className="coming-soon">Analytics coming soon!</div>}
+            element={
+              <div className="empty-state">
+                <h3>Analytics</h3>
+                <p>Analytics dashboard under development</p>
+              </div>
+            }
           />
           <Route
             path="settings"
-            element={<div className="coming-soon">Settings coming soon!</div>}
+            element={
+              <div className="empty-state">
+                <h3>Settings</h3>
+                <p>Admin settings under development</p>
+              </div>
+            }
           />
         </Routes>
       </main>

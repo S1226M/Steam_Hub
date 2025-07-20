@@ -11,86 +11,7 @@ const Explore = () => {
   const [filter, setFilter] = useState("trending");
 
   // Mock trending videos data
-  const mockTrendingVideos = [
-    {
-      id: 1,
-      title: "🔥 Viral Tech: AI That Reads Your Mind",
-      channel: "TechTrends",
-      views: "15.2M",
-      date: "2 hours ago",
-      length: "8:45",
-      thumbnail: "https://picsum.photos/320/180?random=10",
-      videoUrl:
-        "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4",
-      premium: false,
-      trending: true,
-    },
-    {
-      id: 2,
-      title: "🎵 Music: New Album Release - Behind the Scenes",
-      channel: "MusicWorld",
-      views: "8.7M",
-      date: "5 hours ago",
-      length: "12:30",
-      thumbnail: "https://picsum.photos/320/180?random=11",
-      videoUrl:
-        "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_2mb.mp4",
-      premium: true,
-      trending: true,
-    },
-    {
-      id: 3,
-      title: "🎮 Gaming: Epic Battle Royale Finale",
-      channel: "GameZone",
-      views: "22.1M",
-      date: "1 day ago",
-      length: "45:20",
-      thumbnail: "https://picsum.photos/320/180?random=12",
-      videoUrl:
-        "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_5mb.mp4",
-      premium: false,
-      trending: true,
-    },
-    {
-      id: 4,
-      title: "🍳 Cooking: 5-Minute Breakfast Ideas",
-      channel: "QuickBites",
-      views: "3.4M",
-      date: "3 hours ago",
-      length: "5:15",
-      thumbnail: "https://picsum.photos/320/180?random=13",
-      videoUrl:
-        "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4",
-      premium: false,
-      trending: false,
-    },
-    {
-      id: 5,
-      title: "🏃‍♂️ Fitness: 10-Minute Full Body Workout",
-      channel: "FitLife",
-      views: "6.8M",
-      date: "6 hours ago",
-      length: "10:30",
-      thumbnail: "https://picsum.photos/320/180?random=14",
-      videoUrl:
-        "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_2mb.mp4",
-      premium: false,
-      trending: true,
-    },
-    {
-      id: 6,
-      title: "🌍 Travel: Hidden Gems in Japan",
-      channel: "Wanderlust",
-      views: "4.2M",
-      date: "1 day ago",
-      length: "28:45",
-      thumbnail: "https://picsum.photos/320/180?random=15",
-      videoUrl:
-        "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_5mb.mp4",
-      premium: true,
-      trending: false,
-    },
-  ];
+  
 
   useEffect(() => {
     const fetchVideos = async () => {
@@ -98,19 +19,11 @@ const Explore = () => {
         setLoading(true);
         setError(null);
 
-        // Try to fetch from API first
         const response = await axios.get("http://localhost:5000/api/videos");
-
-        if (response.data && response.data.length > 0) {
-          setVideos(response.data);
-        } else {
-          // Fallback to mock data
-          setVideos(mockTrendingVideos);
-        }
+        setVideos(Array.isArray(response.data) ? response.data : []);
       } catch (err) {
         console.error("Video fetch failed:", err);
-        setVideos(mockTrendingVideos);
-        setError("Could not load videos from server. Showing demo content.");
+        setError("Could not load videos from server.");
       } finally {
         setLoading(false);
       }
@@ -120,7 +33,9 @@ const Explore = () => {
   }, []);
 
   const filteredVideos =
-    filter === "trending" ? videos.filter((video) => video.trending) : videos;
+    filter === "trending" 
+      ? (Array.isArray(videos) ? videos.filter((video) => video.trending) : [])
+      : (Array.isArray(videos) ? videos : []);
 
   const handleVideoClick = (video) => {
     setSelectedVideo(video);
@@ -246,8 +161,8 @@ const Explore = () => {
             <p>Try changing the filter or check back later for new content.</p>
           </div>
         ) : (
-          <div className="videos-grid">
-            {filteredVideos.map((vid) => (
+                  <div className="videos-grid">
+          {Array.isArray(filteredVideos) && filteredVideos.map((vid) => (
               <div
                 className="video-card"
                 key={vid.id}

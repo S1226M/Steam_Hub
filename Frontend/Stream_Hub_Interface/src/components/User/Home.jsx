@@ -18,81 +18,7 @@ const categories = [
   "Sports",
 ];
 
-// Mock data for demonstration
-const mockVideos = [
-  {
-    id: 1,
-    title: "Amazing Tech Review: Latest Smartphone 2024",
-    channel: "TechReviews Pro",
-    views: "2.1M",
-    date: "2 days ago",
-    length: "12:34",
-    thumbnail: "https://picsum.photos/320/180?random=1",
-    videoUrl: "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4",
-    premium: false,
-    category: "Tech Reviews"
-  },
-  {
-    id: 2,
-    title: "Cooking Masterclass: Italian Pasta Secrets",
-    channel: "Chef's Kitchen",
-    views: "890K",
-    date: "1 week ago",
-    length: "18:45",
-    thumbnail: "https://picsum.photos/320/180?random=2",
-    videoUrl: "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_2mb.mp4",
-    premium: true,
-    category: "Cooking"
-  },
-  {
-    id: 3,
-    title: "Epic Gaming Moments: Battle Royale Highlights",
-    channel: "GamingZone",
-    views: "5.2M",
-    date: "3 days ago",
-    length: "25:12",
-    thumbnail: "https://picsum.photos/320/180?random=3",
-    videoUrl: "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_5mb.mp4",
-    premium: false,
-    category: "Gaming"
-  },
-  {
-    id: 4,
-    title: "Travel Vlog: Exploring Hidden Beaches in Bali",
-    channel: "Wanderlust",
-    views: "1.4M",
-    date: "5 days ago",
-    length: "32:18",
-    thumbnail: "https://picsum.photos/320/180?random=4",
-    videoUrl: "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4",
-    premium: false,
-    category: "Travel"
-  },
-  {
-    id: 5,
-    title: "Workout Routine: Full Body HIIT Training",
-    channel: "FitLife",
-    views: "756K",
-    date: "1 day ago",
-    length: "28:33",
-    thumbnail: "https://picsum.photos/320/180?random=5",
-    videoUrl: "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_2mb.mp4",
-    premium: false,
-    category: "Fitness"
-  },
-  {
-    id: 6,
-    title: "Comedy Skit: Office Life is Crazy!",
-    channel: "Laugh Factory",
-    views: "3.8M",
-    date: "4 days ago",
-    length: "8:45",
-    thumbnail: "https://picsum.photos/320/180?random=6",
-    videoUrl: "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_5mb.mp4",
-    premium: false,
-    category: "Comedy"
-  }
-];
+
 
 export default function Home() {
   const navigate = useNavigate();
@@ -107,20 +33,11 @@ export default function Home() {
         setLoading(true);
         setError(null);
         
-        // Try to fetch from API first
         const videosData = await videoAPI.getAllVideos();
-        
-        if (videosData && videosData.length > 0) {
-          setVideos(videosData);
-        } else {
-          // Fallback to mock data if API returns empty
-          setVideos(mockVideos);
-        }
+        setVideos(Array.isArray(videosData) ? videosData : []);
       } catch (err) {
         console.error("Video fetch failed:", err);
-        // Use mock data as fallback
-        setVideos(mockVideos);
-        setError("Could not load videos from server. Showing demo content.");
+        setError("Could not load videos from server.");
       } finally {
         setLoading(false);
       }
@@ -131,8 +48,8 @@ export default function Home() {
 
   const filteredVideos =
     selected === "All"
-      ? videos
-      : videos.filter((vid) => vid.category === selected);
+      ? (Array.isArray(videos) ? videos : [])
+      : (Array.isArray(videos) ? videos.filter((vid) => vid.category === selected) : []);
 
   const handleCategoryClick = (category) => {
     setSelected(category);
@@ -146,7 +63,7 @@ export default function Home() {
   };
 
   const handleVideoClick = (video) => {
-    navigate(`/video/${video._id || video.id}`);
+    navigate(`/video/${video._id}`);
   };
 
   const formatNumber = (num) => {
@@ -199,7 +116,7 @@ export default function Home() {
 
       <div className="categories-container">
         <div className="categories">
-          {categories.map((cat) => (
+          {Array.isArray(categories) && categories.map((cat) => (
             <button
               key={cat}
               className={`category-btn ${cat === selected ? "active" : ""}`}
@@ -227,8 +144,8 @@ export default function Home() {
             <p>Try selecting a different category or check back later for new content.</p>
           </div>
         ) : (
-          <div className="videos-grid">
-            {filteredVideos.map((vid) => (
+                  <div className="videos-grid">
+          {Array.isArray(filteredVideos) && filteredVideos.map((vid) => (
               <div 
                 className="video-card" 
                 key={vid._id || vid.id}

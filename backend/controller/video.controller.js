@@ -1,7 +1,9 @@
 import fs from "fs";
+import path from "path";
 import cloudinary from "../config/cloudnary.js";
 import Video from "../model/video.model.js";
 import mongoose from "mongoose";
+import { generateSmartThumbnail, cleanupThumbnail } from "../utils/thumbnailGenerator.js";
 
 // Upload Video (requires authenticated user in req.user)
 export const uploadVideo = async (req, res) => {
@@ -12,8 +14,8 @@ export const uploadVideo = async (req, res) => {
       body: req.body
     });
 
-    if (!req.file) {
-      console.log("❌ No file uploaded");
+    if (!req.files || !req.files.video) {
+      console.log("❌ No video file uploaded");
       return res.status(400).json({ error: "No video uploaded" });
     }
     
@@ -22,8 +24,51 @@ export const uploadVideo = async (req, res) => {
       return res.status(401).json({ error: "Unauthorized. No user found." });
     }
 
-    const filePath = req.file.path;
+    const videoFile = req.files.video[0];
+    const filePath = videoFile.path;
     console.log("📁 File path:", filePath);
+
+    // Generate thumbnail directory
+    const thumbnailDir = path.join(process.cwd(), 'temp', 'thumbnails');
+    let thumbnailPath = null;
+    let videoDuration = 0;
+    let customThumbnail = null;
+
+    // Check if user uploaded a custom thumbnail
+    if (req.files && req.files.thumbnail) {
+      customThumbnail = req.files.thumbnail[0];
+      console.log("🖼️ Custom thumbnail uploaded:", customThumbnail.originalname);
+    }
+
+    // Generate auto thumbnail only if no custom thumbnail provided
+    if (!customThumbnail) {
+      try {
+        console.log("🖼️ Generating auto thumbnail...");
+        const thumbnailResult = await generateSmartThumbnail(filePath, thumbnailDir);
+        thumbnailPath = thumbnailResult.thumbnailPath;
+        videoDuration = thumbnailResult.duration;
+        console.log("✅ Auto thumbnail generated successfully");
+      } catch (thumbnailError) {
+        console.error("❌ Auto thumbnail generation failed:", thumbnailError.message);
+        // Continue without thumbnail
+      }
+    } else {
+      // Get video duration for custom thumbnail
+      try {
+        const ffmpeg = require('fluent-ffmpeg');
+        const ffmpegStatic = require('ffmpeg-static');
+        ffmpeg.setFfmpegPath(ffmpegStatic);
+        
+        ffmpeg.ffprobe(filePath, (err, metadata) => {
+          if (!err && metadata.format) {
+            videoDuration = metadata.format.duration;
+            console.log(`📹 Video duration: ${videoDuration}s`);
+          }
+        });
+      } catch (durationError) {
+        console.error("❌ Error getting video duration:", durationError.message);
+      }
+    }
 
     console.log("☁️ Uploading to Cloudinary...");
     
@@ -33,11 +78,11 @@ export const uploadVideo = async (req, res) => {
       
       // Create a mock video entry for testing
       const video = await Video.create({
-        title: req.body.title || req.file.originalname,
+        title: req.body.title || videoFile.originalname,
         description: req.body.description || "",
         videoUrl: `file://${filePath}`, // Local file path for testing
-        thumbnail: `file://${filePath}.jpg`,
-        duration: 0,
+        thumbnail: thumbnailPath ? `file://${thumbnailPath}` : `file://${filePath}.jpg`,
+        duration: videoDuration,
         public_id: `mock_${Date.now()}`,
         category: req.body.category || "General",
         owner: req.user._id,
@@ -54,28 +99,80 @@ export const uploadVideo = async (req, res) => {
       return;
     }
 
-    const result = await cloudinary.uploader.upload(filePath, {
+    // Upload video to Cloudinary
+    const videoResult = await cloudinary.uploader.upload(filePath, {
       resource_type: "video",
       folder: "videos",
     });
-    console.log("✅ Cloudinary upload successful:", result.public_id);
+    console.log("✅ Video uploaded to Cloudinary:", videoResult.public_id);
 
-    // Cleanup temp file
+    // Upload thumbnail to Cloudinary
+    let thumbnailUrl = null;
+    
+    if (customThumbnail) {
+      // Upload custom thumbnail
+      try {
+        const thumbnailResult = await cloudinary.uploader.upload(customThumbnail.path, {
+          folder: "thumbnails",
+          transformation: [
+            { width: 320, height: 180, crop: "fill" }
+          ]
+        });
+        thumbnailUrl = thumbnailResult.secure_url;
+        console.log("✅ Custom thumbnail uploaded to Cloudinary:", thumbnailResult.public_id);
+        
+        // Clean up local custom thumbnail file
+        try {
+          fs.unlinkSync(customThumbnail.path);
+          console.log("🗑️ Custom thumbnail file cleaned up");
+        } catch (cleanupError) {
+          console.log("⚠️ Failed to cleanup custom thumbnail file:", cleanupError.message);
+        }
+      } catch (thumbnailUploadError) {
+        console.error("❌ Custom thumbnail upload failed:", thumbnailUploadError.message);
+        // Use video URL as fallback
+        thumbnailUrl = videoResult.secure_url + ".jpg";
+      }
+    } else if (thumbnailPath) {
+      // Upload auto-generated thumbnail
+      try {
+        const thumbnailResult = await cloudinary.uploader.upload(thumbnailPath, {
+          folder: "thumbnails",
+          transformation: [
+            { width: 320, height: 180, crop: "fill" }
+          ]
+        });
+        thumbnailUrl = thumbnailResult.secure_url;
+        console.log("✅ Auto thumbnail uploaded to Cloudinary:", thumbnailResult.public_id);
+        
+        // Clean up local thumbnail file
+        await cleanupThumbnail(thumbnailPath);
+      } catch (thumbnailUploadError) {
+        console.error("❌ Auto thumbnail upload failed:", thumbnailUploadError.message);
+        // Use video URL as fallback
+        thumbnailUrl = videoResult.secure_url + ".jpg";
+      }
+    } else {
+      // Fallback to video URL
+      thumbnailUrl = videoResult.secure_url + ".jpg";
+    }
+
+    // Cleanup temp video file
     try {
       fs.unlinkSync(filePath);
-      console.log("🗑️ Temp file cleaned up");
+      console.log("🗑️ Temp video file cleaned up");
     } catch (cleanupError) {
-      console.log("⚠️ Failed to cleanup temp file:", cleanupError.message);
+      console.log("⚠️ Failed to cleanup temp video file:", cleanupError.message);
     }
 
     console.log("💾 Saving video to database...");
     const video = await Video.create({
-      title: req.body.title || result.original_filename,
+      title: req.body.title || videoFile.originalname,
       description: req.body.description || "",
-      videoUrl: result.secure_url,
-      thumbnail: result.secure_url + ".jpg",
-      duration: result.duration,
-      public_id: result.public_id,
+      videoUrl: videoResult.secure_url,
+      thumbnail: thumbnailUrl,
+      duration: videoDuration || videoResult.duration,
+      public_id: videoResult.public_id,
       category: req.body.category || "General",
       owner: req.user._id,
       isPublic: req.body.isPublic !== "false",
@@ -156,8 +253,8 @@ export const getVideoById = async (req, res) => {
       return res.status(403).json({ message: "Video is private" });
     }
 
-    // Increment view count
-    await Video.findByIdAndUpdate(id, { $inc: { views: 1 } });
+    // Note: View count is now handled by the watch log system
+    // Views are only incremented when a user logs a view via /api/watchlogs/log/:videoId
 
     res.json(video);
   } catch (err) {

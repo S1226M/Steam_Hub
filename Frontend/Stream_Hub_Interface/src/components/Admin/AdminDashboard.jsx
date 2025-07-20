@@ -13,43 +13,7 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Mock admin data
-  const mockStats = {
-    totalVideos: 1247,
-    totalUsers: 15420,
-    totalViews: "2.4M",
-    totalLikes: 89234,
-  };
 
-  const mockRecentVideos = [
-    {
-      id: 1,
-      title: "Amazing Tech Review: Latest Smartphone 2024",
-      channel: "TechReviews Pro",
-      views: "2.1M",
-      likes: 45.2,
-      uploadDate: "2024-01-15",
-      status: "published",
-    },
-    {
-      id: 2,
-      title: "Cooking Masterclass: Italian Pasta Secrets",
-      channel: "Chef's Kitchen",
-      views: "890K",
-      likes: 23.1,
-      uploadDate: "2024-01-14",
-      status: "published",
-    },
-    {
-      id: 3,
-      title: "Epic Gaming Moments: Battle Royale Highlights",
-      channel: "GamingZone",
-      views: "5.2M",
-      likes: 67.8,
-      uploadDate: "2024-01-13",
-      status: "pending",
-    },
-  ];
 
   useEffect(() => {
     const fetchAdminData = async () => {
@@ -57,30 +21,16 @@ const AdminDashboard = () => {
         setLoading(true);
         setError(null);
 
-        // Try to fetch from API first
         const [statsResponse, videosResponse] = await Promise.all([
           axios.get("http://localhost:5000/api/admin/stats"),
           axios.get("http://localhost:5000/api/admin/recent-videos"),
         ]);
 
-        if (statsResponse.data) {
-          setStats(statsResponse.data);
-        } else {
-          setStats(mockStats);
-        }
-
-        if (videosResponse.data) {
-          setRecentVideos(videosResponse.data);
-        } else {
-          setRecentVideos(mockRecentVideos);
-        }
+        setStats(statsResponse.data || {});
+        setRecentVideos(Array.isArray(videosResponse.data) ? videosResponse.data : []);
       } catch (err) {
         console.error("Admin data fetch failed:", err);
-        setStats(mockStats);
-        setRecentVideos(mockRecentVideos);
-        setError(
-          "Could not load admin data from server. Showing demo content."
-        );
+        setError("Could not load admin data from server.");
       } finally {
         setLoading(false);
       }
@@ -259,7 +209,7 @@ const AdminDashboard = () => {
             </div>
 
             <div className="table-body">
-              {recentVideos.map((video) => (
+              {Array.isArray(recentVideos) && recentVideos.map((video) => (
                 <div key={video.id} className="table-row">
                   <div className="table-cell video-info">
                     <div className="video-thumb">
